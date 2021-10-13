@@ -65,7 +65,7 @@ graalvmNative {
 
         test {
             verbose = true
-            agent = false
+            agent = true
         }
     }
 }

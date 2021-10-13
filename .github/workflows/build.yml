@@ -10,7 +10,6 @@ on:
       - '*'
 
 jobs:
-
   linux-image:
     name: Linux
     runs-on: ubuntu-18.04
@@ -25,11 +24,15 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Java
-        uses: actions/setup-java@v1
+      - name: Setup Graalvm
+        uses: DeLaGuardo/setup-graalvm@master
         with:
-          java-version: '11'
-          architecture: x64
+          graalvm: '21.2.0'
+          java: 'java11'
+          arch: 'amd64'
+
+      - name: Install native-image component
+        run: gu install native-image
 
       - name: Tests
         run: ./gradlew cleanTest test
@@ -64,11 +67,15 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Java
-        uses: actions/setup-java@v1
+      - name: Setup Graalvm
+        uses: DeLaGuardo/setup-graalvm@master
         with:
-          java-version: '11'
-          architecture: x64
+          graalvm: '21.2.0'
+          java: 'java11'
+          arch: 'amd64'
+
+      - name: Install native-image component
+        run: gu install native-image
 
       - name: Tests
         run: ./gradlew cleanTest test
@@ -103,11 +110,15 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Java
-        uses: actions/setup-java@v1
+      - name: Setup Graalvm
+        uses: DeLaGuardo/setup-graalvm@master
         with:
-          java-version: '11'
-          architecture: x64
+          graalvm: '21.2.0'
+          java: 'java11'
+          arch: 'amd64'
+
+      - name: Install native-image component
+        run: gu.cmd install native-image
 
       - name: Tests
         run: ./gradlew cleanTest test

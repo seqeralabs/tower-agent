@@ -110,6 +110,9 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Add MSVC dev setup
+        uses: ilammy/msvc-dev-cmd@v1.10.0
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.3
 

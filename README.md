@@ -1,12 +1,17 @@
-## Micronaut 2.5.12 Documentation
+# Tower Agent
 
-- [User Guide](https://docs.micronaut.io/2.5.12/guide/index.html)
-- [API Reference](https://docs.micronaut.io/2.5.12/api/index.html)
-- [Configuration Reference](https://docs.micronaut.io/2.5.12/guide/configurationreference.html)
-- [Micronaut Guides](https://guides.micronaut.io/index.html)
----
+Tower Agent allows Tower to launch pipelines on HPC clusters that do not allow 
+direct access throw an SSH client. 
 
-## Feature http-client documentation
+Tower Agent it's a standalone process that when executed in a node that can submit 
+jobs to the cluster (i.e. the login node) it establishes an authenticated secure 
+reverse connection with Tower, allowing Tower to submit and monitor new jobs. The 
+jobs are submitted on behalf of the same user that it's running the agent process.
 
-- [Micronaut HTTP Client documentation](https://docs.micronaut.io/latest/guide/index.html#httpClient)
+## Build binary version
+
+```
+/gradlew nativeBuild
+```
+
 

@@ -1,5 +1,5 @@
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id 'org.graalvm.buildtools.native'
     id("io.micronaut.application") version "2.0.6"
 }
 
@@ -19,17 +19,27 @@ micronaut {
     }
 }
 
+def junitVersion = providers.gradleProperty('junit.jupiter.version')
+        .forUseAtConfigurationTime()
+        .get()
+
 dependencies {
     annotationProcessor("io.micronaut:micronaut-http-validation")
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+    annotationProcessor("io.micronaut:micronaut-graal")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut:micronaut-runtime")
     implementation("io.micronaut.rxjava2:micronaut-rxjava2")
     implementation("io.micronaut.rxjava2:micronaut-rxjava2-http-client")
     implementation("javax.annotation:javax.annotation-api")
+    implementation("javax.inject:javax.inject:1")
     runtimeOnly("ch.qos.logback:logback-classic")
     compileOnly("org.graalvm.nativeimage:svm")
 
     implementation("io.micronaut:micronaut-validation")
+
+    testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
+    testImplementation('org.junit.jupiter:junit-jupiter')
 }
 
 application {
@@ -41,8 +51,23 @@ java {
     targetCompatibility = JavaVersion.toVersion("11")
 }
 
-nativeImage {
-    args('--allow-incomplete-classpath')
-    imageName('towr-agent')
+test {
+    useJUnitPlatform()
+}
+
+nativeBuild {
+    imageName = "towr-agent"
+    mainClass = "io.seqera.tower.agent.Agent"
+    verbose = true
+    fallback = false
+}
+
+graalvmNative {
+    binaries {
+        test {
+            verbose = true
+            agent = true
+        }
+    }
 }
 

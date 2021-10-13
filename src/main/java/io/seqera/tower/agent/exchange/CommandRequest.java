@@ -1,13 +1,13 @@
 package io.seqera.tower.agent.exchange;
 
 
-import io.micronaut.core.annotation.Introspected;
+import io.micronaut.core.annotation.ReflectiveAccess;
 
 /**
  *
  * @author Jordi Deu-Pons <jordi@seqera.io>
  */
-@Introspected
+@ReflectiveAccess
 public class CommandRequest {
 
     private String id;

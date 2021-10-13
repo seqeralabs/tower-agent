@@ -12,7 +12,8 @@ on:
 jobs:
   linux-image:
     name: Linux
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    container: debian:jessie
     timeout-minutes: 90
 
     steps:

@@ -13,7 +13,7 @@ jobs:
   linux-image:
     name: Linux
     runs-on: ubuntu-latest
-    container: debian:jessie
+    container: debian:stretch
     timeout-minutes: 90
 
     steps:

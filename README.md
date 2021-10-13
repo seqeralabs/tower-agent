@@ -14,4 +14,7 @@ jobs are submitted on behalf of the same user that it's running the agent proces
 /gradlew nativeBuild
 ```
 
+## Links
+
+- GraalVM build tools: https://graalvm.github.io/native-build-tools
 

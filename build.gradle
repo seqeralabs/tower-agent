@@ -55,15 +55,14 @@ test {
     useJUnitPlatform()
 }
 
-nativeBuild {
-    imageName = "towr-agent"
-    mainClass = "io.seqera.tower.agent.Agent"
-    verbose = true
-    fallback = false
-}
 
 graalvmNative {
     binaries {
+        main {
+            imageName = 'towr-agent'
+            mainClass = 'io.seqera.tower.agent.Agent'
+        }
+
         test {
             verbose = true
             agent = true

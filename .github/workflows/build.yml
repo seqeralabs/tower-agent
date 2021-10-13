@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 1
 
       - name: Install build-essentials
-        run: DEBIAN_FRONTEND=noninteractive apt update && apt install --assume-yes --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+        run: DEBIAN_FRONTEND=noninteractive apt update && apt install --assume-yes --no-install-recommends build-essential zlib1g-dev && rm -rf /var/lib/apt/lists/*
 
       - name: Setup Graalvm
         uses: DeLaGuardo/setup-graalvm@master

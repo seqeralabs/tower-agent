@@ -70,7 +70,9 @@ abstract class AgentClientSocket implements AutoCloseable {
 
     @OnClose
     void onClose() {
-        System.out.println("Closed after " + Duration.between(openingTime, Instant.now()));
+        if (openingTime != null) {
+            System.out.println("Closed after " + Duration.between(openingTime, Instant.now()));
+        }
     }
 
     abstract void send(CommandResponse response);

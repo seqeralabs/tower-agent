@@ -13,7 +13,7 @@ jobs:
   linux-image:
     name: Linux
     runs-on: ubuntu-latest
-    container: debian:stretch
+    container: public.ecr.aws/seqera-labs/graalvm-static:latest
     timeout-minutes: 90
 
     steps:
@@ -49,7 +49,7 @@ jobs:
           path: build/reports/tests/test/
 
       - name: Build Native Image
-        run: ./gradlew nativeBuild
+        run: ./gradlew nativeCompile
 
       - name: Upload linux native image artifact
         uses: actions/upload-artifact@v2
@@ -92,7 +92,7 @@ jobs:
           path: build/reports/tests/test/
 
       - name: Build Native Image
-        run: ./gradlew nativeBuild
+        run: ./gradlew nativeCompile
 
       - name: Upload Mac native image artifact
         uses: actions/upload-artifact@v2
@@ -141,7 +141,7 @@ jobs:
           path: build/reports/tests/test/
 
       - name: Build Native Image
-        run: ./gradlew nativeBuild
+        run: ./gradlew nativeCompile
 
       - name: Upload Windows native image artifact
         uses: actions/upload-artifact@v2

@@ -1,3 +1,5 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
 plugins {
     id 'org.graalvm.buildtools.native'
     id("io.micronaut.application") version "2.0.6"
@@ -82,13 +84,13 @@ test {
     useJUnitPlatform()
 }
 
+
 graalvmNative {
     binaries {
         main {
             imageName = 'towr-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
-            buildArgs.add('--static')
-            buildArgs.add('--libc=musl')
+            buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
         }
 
         test {

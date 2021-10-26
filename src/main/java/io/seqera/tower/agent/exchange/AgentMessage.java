@@ -3,11 +3,9 @@ package io.seqera.tower.agent.exchange;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.micronaut.core.annotation.ReflectiveAccess;
 
 import java.io.Serializable;
 
-@ReflectiveAccess
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 @JsonSubTypes({

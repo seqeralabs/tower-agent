@@ -1,8 +1,11 @@
 package io.seqera.tower.agent.exchange;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
+
 /**
  * @author Jordi Deu-Pons <jordi@seqera.io>
  */
+@ReflectiveAccess
 public class CommandRequest extends AgentMessage {
     private String id;
     private String command;

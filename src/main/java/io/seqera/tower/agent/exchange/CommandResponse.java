@@ -1,10 +1,13 @@
 package io.seqera.tower.agent.exchange;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
+
 import java.nio.charset.StandardCharsets;
 
 /**
  * @author Jordi Deu-Pons <jordi@sequera.io>
  */
+@ReflectiveAccess
 public class CommandResponse extends AgentMessage {
     private String id;
     private byte[] result;

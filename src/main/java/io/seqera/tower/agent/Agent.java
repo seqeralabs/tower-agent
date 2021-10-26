@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 
+import io.seqera.tower.agent.exchange.HeartbeatMessage;
 import io.seqera.tower.agent.utils.VersionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,7 @@ public class Agent implements Runnable {
 
         scheduler.scheduleAtFixedRate(null, Duration.ofMinutes(1), () -> {
             System.out.println("Sending heartbeat");
-            agentClient.send(new CommandResponse(true));
+            agentClient.send(new HeartbeatMessage());
         });
     }
 

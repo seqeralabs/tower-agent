@@ -1,51 +1,47 @@
 package io.seqera.tower.agent.exchange;
 
-import io.micronaut.core.annotation.ReflectiveAccess;
+import java.nio.charset.StandardCharsets;
 
 /**
- *
- * @author Jordi Deu-Pons <jordi@seqera.io>
+ * @author Jordi Deu-Pons <jordi@sequera.io>
  */
-@ReflectiveAccess
-public class CommandResponse {
-
+public class CommandResponse extends AgentMessage {
     private String id;
-    private String result;
+    private byte[] result;
     private int exitStatus;
 
-    private boolean heartbeat;
+    public CommandResponse() {
+    }
 
-    public CommandResponse() {}
-
-    public CommandResponse(String id, String result, int exitStatus) {
+    public CommandResponse(String id, byte[] result, int exitStatus) {
         this.id = id;
         this.result = result;
         this.exitStatus = exitStatus;
-    }
-
-    public CommandResponse(boolean heartbeat) {
-        this.heartbeat = heartbeat;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getResult() {
+    public byte[] getResult() {
         return result;
+    }
+
+    public String getResultAsString() {
+        if (result == null) {
+            return null;
+        }
+
+        return new String(result, StandardCharsets.UTF_8);
     }
 
     public int getExitStatus() {
         return exitStatus;
     }
 
-    public boolean isHeartbeat() {
-        return heartbeat;
-    }
-
     @Override
     public String toString() {
-        return "CommandResponse[id="+id+"; result="+result+"; exitStatus="+exitStatus+"]";
+        return "CommandResponse[id=" + id + "; result=" + new String(result, StandardCharsets.UTF_8) + "; exitStatus=" + exitStatus + "]";
     }
 
 }

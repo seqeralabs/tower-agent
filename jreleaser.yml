@@ -12,7 +12,7 @@ project:
 release:
   github:
     overwrite: true
-    draft: true
+    draft: false
     prerelease:
       pattern: .*-beta
     discussionCategoryName: Announcements
@@ -22,32 +22,26 @@ release:
       contributors:
         format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
       labelers:
-        - label: 'merge_pull'
-          title: 'Merge pull'
-        - label: 'merge_branch'
-          title: 'Merge branch'
-        - label: 'translation'
-          title: '[translation]'
-        - label: 'task'
-          title: '[chore]'
-        - label: 'dependencies'
-          title: '[deps]'
         - label: 'feature'
           title: 'Resolves #'
           body: 'Resolves #'
+        - label: 'feature'
+          title: '[feature]'
         - label: 'issue'
           title: 'Fixes #'
           body: 'Fixes #'
         - label: 'issue'
           title: 'Relates to #'
           body: 'Relates to #'
-        - label: 'allcontributors'
-          title: 'docs: update'
+        - label: 'issue'
+          title: '[bug]'
+        - label: 'task'
+          title: '[task]'
+        - label: 'merge_pull'
+          title: 'Merge pull'
+        - label: 'merge_branch'
+          title: 'Merge branch'
       categories:
-        - title: 'Merge'
-          labels:
-            - 'merge_pull'
-            - 'merge_branch'
         - title: '🚀 Features'
           labels:
             - 'feature'
@@ -57,23 +51,20 @@ release:
         - title: '🧰 Tasks'
           labels:
             - 'task'
-        - title: '⚙️Dependencies'
+        - title: 'Merge'
           labels:
-            - 'dependencies'
-        - title: 'allcontributors'
-          labels:
-            - 'allcontributors'
+            - 'merge_pull'
+            - 'merge_branch'
       hide:
         categories:
           - 'Merge'
-          - 'allcontributors'
         contributors:
           - 'GitHub'
-          - 'allcontributors'
       replacers:
-        - search: '\[chore\] '
-        - search: '\[deps\] '
-        - search: '\[translation\] '
+        - search: ' \[feature\]'
+        - search: ' \[bug\]'
+        - search: ' \[task\]'
+        - search: ' \[skip ci\]'
 
 distributions:
   tw-agent:

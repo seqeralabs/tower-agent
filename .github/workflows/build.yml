@@ -147,4 +147,13 @@ jobs:
           name: towr_agent_windows
           path: build/native/nativeCompile/tw-agent.exe
 
+  release:
+    name: Release
+    needs: [linux-image, mac-image, windows-image]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+      - name: Display structure of downloaded files
+        run: ls -R
 

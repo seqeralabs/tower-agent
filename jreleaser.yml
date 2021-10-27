@@ -15,14 +15,77 @@ release:
     draft: true
     prerelease:
       pattern: .*-beta
+    sign: true
+    discussionCategoryName: Announcements
+    changelog:
+      formatted: ALWAYS
+      format: '- {{commitShortHash}} {{commitTitle}}'
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
+      labelers:
+        - label: 'merge_pull'
+          title: 'Merge pull'
+        - label: 'merge_branch'
+          title: 'Merge branch'
+        - label: 'translation'
+          title: '[translation]'
+        - label: 'task'
+          title: '[chore]'
+        - label: 'dependencies'
+          title: '[deps]'
+        - label: 'feature'
+          title: 'Resolves #'
+          body: 'Resolves #'
+        - label: 'issue'
+          title: 'Fixes #'
+          body: 'Fixes #'
+        - label: 'issue'
+          title: 'Relates to #'
+          body: 'Relates to #'
+        - label: 'allcontributors'
+          title: 'docs: update'
+      categories:
+        - title: 'Merge'
+          labels:
+            - 'merge_pull'
+            - 'merge_branch'
+        - title: '🚀 Features'
+          labels:
+            - 'feature'
+        - title: '✅ Issues'
+          labels:
+            - 'issue'
+        - title: '🧰 Tasks'
+          labels:
+            - 'task'
+        - title: '⚙️Dependencies'
+          labels:
+            - 'dependencies'
+        - title: 'allcontributors'
+          labels:
+            - 'allcontributors'
+      hide:
+        categories:
+          - 'Merge'
+          - 'allcontributors'
+        contributors:
+          - 'GitHub'
+          - 'allcontributors'
+      replacers:
+        - search: '\[chore\] '
+        - search: '\[deps\] '
+        - search: '\[translation\] '
 
 distributions:
   tw-agent:
     type: NATIVE_IMAGE
     artifacts:
       - path: "tw_agent_linux/tw-agent"
+        transform: "{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64"
         platform: linux-x86_64
       - path: "tw_agent_mac/tw-agent"
+        transform: "{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64"
         platform: osx-x86_64
       - path: "tw_agent_windows/tw-agent.exe"
+        transform: "{{distributionName}}-{{projectEffectiveVersion}}-windows-x86_64.exe"
         platform: windows-x86_64

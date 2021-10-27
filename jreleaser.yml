@@ -15,7 +15,6 @@ release:
     draft: true
     prerelease:
       pattern: .*-beta
-    sign: true
     discussionCategoryName: Announcements
     changelog:
       formatted: ALWAYS

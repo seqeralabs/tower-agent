@@ -1,6 +1,4 @@
-name: Tower CLI continuous build
-# read more here
-# https://help.github.com/en/articles/workflow-syntax-for-github-actions#on
+name: Tower Agent continuous build
 on:
   push:
     branches:

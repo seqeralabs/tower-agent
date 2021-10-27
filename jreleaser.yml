@@ -1,0 +1,23 @@
+project:
+  name: tw-agent
+  description: Tower Agent
+  longDescription: Tower Agent allows Tower to launch pipelines on HPC clusters that do not allow direct access throw an SSH client.
+  website: https://github.com/seqeralabs/tower-agent
+
+release:
+  github:
+    overwrite: true
+    draft: true
+    prerelease:
+      pattern: .*-beta
+
+distributions:
+  tw-agent:
+    type: NATIVE_IMAGE
+    artifacts:
+      - path: "tw_agent_linux/tw-agent"
+        platform: linux-x86_64
+      - path: "tw_agent_mac/tw-agent"
+        platform: osx-x86_64
+      - path: "tw_agent_windows/tw-agent.exe"
+        platform: windows-x86_64

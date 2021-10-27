@@ -40,6 +40,8 @@ release:
           title: 'Merge pull'
         - label: 'merge_branch'
           title: 'Merge branch'
+        - label: 'release'
+          title: '[release]'
       categories:
         - title: '🚀 Features'
           labels:
@@ -54,9 +56,13 @@ release:
           labels:
             - 'merge_pull'
             - 'merge_branch'
+        - title: 'Release'
+          labels:
+            - 'release'
       hide:
         categories:
           - 'Merge'
+          - 'Release'
         contributors:
           - 'GitHub'
       replacers:
@@ -64,6 +70,7 @@ release:
         - search: ' \[bug\]'
         - search: ' \[task\]'
         - search: ' \[skip ci\]'
+        - search: ' \[release\]'
 
 distributions:
   tw-agent:

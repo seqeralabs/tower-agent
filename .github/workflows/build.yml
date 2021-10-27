@@ -3,13 +3,14 @@ on:
   push:
     branches:
       - '*'
-    tags:
+      - '!refs/tags/.*'
+    tags-ignore:
       - '*'
 
 jobs:
   linux-image:
     name: Linux
-    if: "startsWith(github.event.ref, 'refs/tags/v') || !contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     container: public.ecr.aws/seqera-labs/graalvm-static:latest
     timeout-minutes: 90
@@ -57,7 +58,7 @@ jobs:
 
   mac-image:
     name: Mac
-    if: "startsWith(github.event.ref, 'refs/tags/v') || !contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: macos-latest
     timeout-minutes: 90
 
@@ -101,7 +102,7 @@ jobs:
 
   windows-image:
     name: Windows
-    if: "startsWith(github.event.ref, 'refs/tags/v') || !contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: windows-latest
     timeout-minutes: 90
 
@@ -151,7 +152,7 @@ jobs:
 
   release:
     name: Release
-    if: "startsWith(github.event.ref, 'refs/tags/v')"
+    if: "contains(github.event.head_commit.message, '[release]') && github.event.ref=='refs/heads/master'"
     needs: [linux-image, mac-image, windows-image]
     runs-on: ubuntu-latest
     steps:

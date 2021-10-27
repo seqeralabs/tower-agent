@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: towr_agent_linux
-          path: build/native/nativeCompile/towr-agent
+          path: build/native/nativeCompile/tw-agent
 
   mac-image:
     name: Mac
@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: towr_agent_mac
-          path: build/native/nativeCompile/towr-agent
+          path: build/native/nativeCompile/tw-agent
 
   windows-image:
     name: Windows
@@ -147,6 +147,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: towr_agent_windows
-          path: build/native/nativeCompile/towr-agent.exe
+          path: build/native/nativeCompile/tw-agent.exe
 
 

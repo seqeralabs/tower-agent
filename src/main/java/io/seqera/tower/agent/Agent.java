@@ -22,7 +22,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
 
 @Command(
-        name = "towr-agent",
+        name = "tw-agent",
         description = "Nextflow Tower anywhere agent",
         headerHeading = "%n",
         versionProvider = VersionProvider.class,

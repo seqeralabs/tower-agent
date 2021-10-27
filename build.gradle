@@ -88,7 +88,7 @@ test {
 graalvmNative {
     binaries {
         main {
-            imageName = 'towr-agent'
+            imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
         }

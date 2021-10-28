@@ -1,11 +1,5 @@
 package io.seqera.tower.agent;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.MalformedInputException;
-import java.time.Duration;
-import java.time.Instant;
-
 import io.micronaut.http.HttpRequest;
 import io.micronaut.websocket.WebSocketSession;
 import io.micronaut.websocket.annotation.ClientWebSocket;
@@ -17,6 +11,11 @@ import io.seqera.tower.agent.exchange.CommandRequest;
 import io.seqera.tower.agent.exchange.CommandResponse;
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.time.Duration;
+import java.time.Instant;
+
 /**
  * @author Jordi Deu-Pons <jordi@seqera.io>
  */
@@ -24,14 +23,12 @@ import io.seqera.tower.agent.exchange.HeartbeatMessage;
 abstract class AgentClientSocket implements AutoCloseable {
 
     private WebSocketSession session;
-    private HttpRequest request;
 
     private Instant openingTime;
 
     @OnOpen
     void onOpen(WebSocketSession session, HttpRequest request) {
         this.session = session;
-        this.request = request;
         this.openingTime = Instant.now();
         System.out.println("Client opened connection");
     }

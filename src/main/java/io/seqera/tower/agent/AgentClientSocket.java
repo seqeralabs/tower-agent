@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2021, Seqera Labs.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
 package io.seqera.tower.agent;
 
 import io.micronaut.http.HttpRequest;
@@ -58,13 +69,13 @@ abstract class AgentClientSocket implements AutoCloseable {
     private void execCommand(CommandRequest message) {
         try {
             System.out.println("Execute command: " + message.getCommand());
-            Process process = new ProcessBuilder().command("sh","-c", message.getCommand()).start();
+            Process process = new ProcessBuilder().command("sh", "-c", message.getCommand()).start();
             int exitStatus = process.waitFor();
             // read the stdout
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder builder = new StringBuilder();
-            String line=null;
-            while ( (line = reader.readLine()) != null) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
                 builder.append(line);
                 builder.append("\n");
             }
@@ -75,8 +86,7 @@ abstract class AgentClientSocket implements AutoCloseable {
             System.out.println("Sending response --> " + response);
             session.sendSync(response);
             System.out.println("Response sent");
-        }
-        catch ( Throwable e ){
+        } catch (Throwable e) {
             // send result
             CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), -1);
             session.sendSync(response);

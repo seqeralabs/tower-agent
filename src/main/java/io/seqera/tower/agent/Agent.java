@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2021, Seqera Labs.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
 package io.seqera.tower.agent;
 
 import io.micronaut.configuration.picocli.PicocliRunner;
@@ -7,18 +18,17 @@ import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.rxjava2.http.client.websockets.RxWebSocketClient;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.websocket.exceptions.WebSocketClientException;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Duration;
-
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
 import io.seqera.tower.agent.utils.VersionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Command;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Duration;
 
 @Command(
         name = "tw-agent",
@@ -37,7 +47,6 @@ import picocli.CommandLine.Command;
 )
 public class Agent implements Runnable {
     private static Logger logger = LoggerFactory.getLogger(Agent.class);
-    private ApplicationContext ctx;
 
     @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent", arity = "1")
     String agentKey;
@@ -46,12 +55,17 @@ public class Agent implements Runnable {
     String token;
 
     @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. Defaults to tower.nf (TOWER_API_ENDPOINT)", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
-    public String url;
+    String url;
 
+    private ApplicationContext ctx;
     private AgentClientSocket agentClient;
 
     Agent() {
         ctx = ApplicationContext.run();
+    }
+
+    public static void main(String[] args) throws Exception {
+        PicocliRunner.run(Agent.class, args);
     }
 
     @Override
@@ -88,9 +102,5 @@ public class Agent implements Runnable {
             System.out.println("Sending heartbeat");
             agentClient.send(new HeartbeatMessage());
         });
-    }
-
-    public static void main(String[] args) throws Exception {
-        PicocliRunner.run(Agent.class, args);
     }
 }

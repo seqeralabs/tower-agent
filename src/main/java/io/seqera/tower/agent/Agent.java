@@ -7,7 +7,6 @@ import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.rxjava2.http.client.websockets.RxWebSocketClient;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.websocket.exceptions.WebSocketClientException;
-import io.seqera.tower.agent.exchange.CommandResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,7 +22,7 @@ import picocli.CommandLine.Command;
 
 @Command(
         name = "tw-agent",
-        description = "Nextflow Tower anywhere agent",
+        description = "Nextflow Tower Agent",
         headerHeading = "%n",
         versionProvider = VersionProvider.class,
         mixinStandardHelpOptions = true,
@@ -40,7 +39,7 @@ public class Agent implements Runnable {
     private static Logger logger = LoggerFactory.getLogger(Agent.class);
     private ApplicationContext ctx;
 
-    @Parameters(index = "0", paramLabel = "AGENT_KEY", description = "Agent key to identify this agent", arity = "1")
+    @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent", arity = "1")
     String agentKey;
 
     @Option(names = {"-t", "--access-token"}, description = "Tower personal access token (TOWER_ACCESS_TOKEN)", defaultValue = "${TOWER_ACCESS_TOKEN}")

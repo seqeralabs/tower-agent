@@ -5,7 +5,7 @@ project:
   website: https://github.com/seqeralabs/tower-agent
   authors:
     - Seqera Labs
-  license: Apache-2.0
+  license: MPL-2.0
   extraProperties:
     inceptionYear: 2021
 
@@ -79,9 +79,3 @@ distributions:
       - path: "tw_agent_linux/tw-agent"
         transform: "{{distributionName}}-{{projectEffectiveVersion}}-linux-x86_64"
         platform: linux-x86_64
-      - path: "tw_agent_mac/tw-agent"
-        transform: "{{distributionName}}-{{projectEffectiveVersion}}-osx-x86_64"
-        platform: osx-x86_64
-      - path: "tw_agent_windows/tw-agent.exe"
-        transform: "{{distributionName}}-{{projectEffectiveVersion}}-windows-x86_64.exe"
-        platform: windows-x86_64

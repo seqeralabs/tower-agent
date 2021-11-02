@@ -71,6 +71,7 @@ license {
 
 application {
     mainClass.set("io.seqera.tower.agent.Agent")
+    applicationDefaultJvmArgs = ["-agentlib:native-image-agent=config-merge-dir=conf/"]
 }
 
 String gitVersion() {
@@ -113,6 +114,7 @@ graalvmNative {
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
+            configurationFileDirectories.from(file('conf'))
             buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
         }
 

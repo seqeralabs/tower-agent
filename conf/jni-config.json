@@ -14,12 +14,22 @@
   "name":"com.sun.management.internal.DiagnosticCommandInfo[]"
 },
 {
+  "name":"io.seqera.tower.agent.Agent",
+  "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
   "name":"java.lang.ClassLoader",
-  "methods":[{"name":"getPlatformClassLoader","parameterTypes":[] }]
+  "methods":[
+    {"name":"getPlatformClassLoader","parameterTypes":[] }, 
+    {"name":"loadClass","parameterTypes":["java.lang.String"] }
+  ]
 },
 {
   "name":"java.util.Arrays",
   "methods":[{"name":"asList","parameterTypes":["java.lang.Object[]"] }]
+},
+{
+  "name":"jdk.internal.loader.ClassLoaders$PlatformClassLoader"
 },
 {
   "name":"sun.management.VMManagementImpl",

@@ -11,7 +11,7 @@
 
 package io.seqera.tower.agent;
 
-import io.micronaut.http.HttpRequest;
+import io.micronaut.websocket.CloseReason;
 import io.micronaut.websocket.WebSocketSession;
 import io.micronaut.websocket.annotation.ClientWebSocket;
 import io.micronaut.websocket.annotation.OnClose;
@@ -19,40 +19,46 @@ import io.micronaut.websocket.annotation.OnMessage;
 import io.micronaut.websocket.annotation.OnOpen;
 import io.seqera.tower.agent.exchange.AgentMessage;
 import io.seqera.tower.agent.exchange.CommandRequest;
-import io.seqera.tower.agent.exchange.CommandResponse;
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.Consumer;
 
 /**
  * @author Jordi Deu-Pons <jordi@seqera.io>
  */
 @ClientWebSocket
 abstract class AgentClientSocket implements AutoCloseable {
+    private static Logger logger = LoggerFactory.getLogger(AgentClientSocket.class);
 
     private WebSocketSession session;
-
     private Instant openingTime;
 
+    // Callback to reconnect the agent
+    private Runnable connectCallback;
+
+    // Callback to manage a command request
+    private Consumer<CommandRequest> commandRequestCallback;
+
     @OnOpen
-    void onOpen(WebSocketSession session, HttpRequest request) {
+    void onOpen(WebSocketSession session) {
         this.session = session;
         this.openingTime = Instant.now();
-        System.out.println("Client opened connection");
+        logger.info("Client opened connection");
     }
 
     @OnMessage
     void onMessage(AgentMessage message) {
         if (message instanceof HeartbeatMessage) {
-            System.out.println("Received heartbeat");
+            logger.info("Received heartbeat");
             return;
         }
 
-        if (message instanceof CommandRequest) {
-            execCommand((CommandRequest) message);
+        if (message instanceof CommandRequest && commandRequestCallback != null) {
+            commandRequestCallback.accept((CommandRequest) message);
             return;
         }
 
@@ -60,38 +66,42 @@ abstract class AgentClientSocket implements AutoCloseable {
     }
 
     @OnClose
-    void onClose() {
-        if (openingTime != null) {
-            System.out.println("Closed after " + Duration.between(openingTime, Instant.now()));
+    void onClose(CloseReason reason) {
+
+        // Duplicated agent
+        if (reason.getCode() == 4000) {
+            logger.error("There is an active agent for this user and connection ID. Please close it before starting a new one.");
+            System.exit(-1);
         }
-    }
 
-    private void execCommand(CommandRequest message) {
-        try {
-            System.out.println("Execute command: " + message.getCommand());
-            Process process = new ProcessBuilder().command("sh", "-c", message.getCommand()).start();
-            int exitStatus = process.waitFor();
-            // read the stdout
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder builder = new StringBuilder();
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-                builder.append("\n");
+        if (reason.getCode() == 4001) {
+            logger.info("Closing to reauthenticate the session");
+            if (connectCallback != null) {
+                connectCallback.run();
             }
-            String result = builder.toString();
+            return;
+        }
 
-            // send result
-            CommandResponse response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
-            System.out.println("Sending response --> " + response);
-            session.sendSync(response);
-            System.out.println("Response sent");
-        } catch (Throwable e) {
-            // send result
-            CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), -1);
-            session.sendSync(response);
+        if (openingTime != null) {
+            Duration d = Duration.between(openingTime, Instant.now());
+            String duration = String.format("%sd %sh %sm %ss", d.toDaysPart(), d.toHoursPart(), d.toMinutesPart(), d.toSecondsPart());
+            logger.info("Closed after {}. [trying to reconnect in {} minutes]", duration, Agent.HEARTBEAT_MINUTES_INTERVAL);
         }
     }
 
     abstract void send(AgentMessage message);
+
+    public boolean isOpen() {
+        return session.isOpen();
+    }
+
+    public void setConnectCallback(Runnable connectCallback) {
+        this.connectCallback = connectCallback;
+    }
+
+    public void setCommandRequestCallback(Consumer<CommandRequest> callback) {
+        this.commandRequestCallback = callback;
+    }
+
+
 }

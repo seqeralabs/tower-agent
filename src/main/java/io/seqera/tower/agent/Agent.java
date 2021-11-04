@@ -19,6 +19,8 @@ import io.micronaut.rxjava2.http.client.RxHttpClient;
 import io.micronaut.rxjava2.http.client.websockets.RxWebSocketClient;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.websocket.exceptions.WebSocketClientException;
+import io.seqera.tower.agent.exchange.CommandRequest;
+import io.seqera.tower.agent.exchange.CommandResponse;
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
 import io.seqera.tower.agent.model.ServiceInfoResponse;
 import io.seqera.tower.agent.utils.VersionProvider;
@@ -28,12 +30,16 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Command(
         name = "tw-agent",
@@ -51,6 +57,7 @@ import java.util.Properties;
         optionListHeading = "%nOptions:%n"
 )
 public class Agent implements Runnable {
+    public static final int HEARTBEAT_MINUTES_INTERVAL = 1;
     private static Logger logger = LoggerFactory.getLogger(Agent.class);
 
     @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent", arity = "1")
@@ -75,27 +82,72 @@ public class Agent implements Runnable {
 
     @Override
     public void run() {
-
-        checkTower();
-
-        final URI uri;
         try {
-            uri = new URI(url + "/agent/" + agentKey + "/connect");
+            checkTower();
+            connectTower();
+            sendPeriodicHeartbeat();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Connect the agent to Tower using websockets
+     */
+    private void connectTower() {
+        try {
+            final URI uri = new URI(url + "/agent/" + agentKey + "/connect");
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
             final RxWebSocketClient webSocketClient = ctx.getBean(RxWebSocketClient.class);
-            agentClient = webSocketClient.connect(AgentClientSocket.class, req).blockingFirst();
-            logger.info("Connected");
-
-            sendPeriodicHeartbeat();
+            agentClient = webSocketClient.connect(AgentClientSocket.class, req)
+                    .timeout(5, TimeUnit.SECONDS)
+                    .blockingFirst();
+            agentClient.setConnectCallback(this::connectTower);
+            agentClient.setCommandRequestCallback(this::execCommand);
         } catch (URISyntaxException e) {
-            logger.error(String.format("Invalid URI: %s/agent/%s/connect - %s", url, agentKey, e.getMessage()));
-            System.exit(-1);
+            logger.error("Invalid URI: {}/agent/{}/connect - {}", url, agentKey, e.getMessage());
         } catch (WebSocketClientException e) {
-            logger.error(String.format("Connection error - %s", e.getMessage()));
-            System.exit(-1);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            System.exit(-1);
+            logger.error("Connection error - {}", e.getMessage());
+        } catch (Exception e) {
+            if (e.getCause() instanceof TimeoutException) {
+                logger.error("Connection timeout [trying to reconnect in {} minutes]", HEARTBEAT_MINUTES_INTERVAL);
+            } else {
+                logger.error("Unknown problem");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Executes a command request and sends the response back to Tower
+     *
+     * @param message Command request message
+     */
+    private void execCommand(CommandRequest message) {
+        try {
+            logger.info("Execute: {}", message.getCommand());
+            Process process = new ProcessBuilder().command("sh", "-c", message.getCommand()).start();
+            int exitStatus = process.waitFor();
+            // read the stdout
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder builder = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+                builder.append("\n");
+            }
+            String result = builder.toString();
+
+            // send result
+            CommandResponse response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
+            logger.info("Sending response --> {}", response);
+            agentClient.send(response);
+            logger.info("Response sent");
+        } catch (Exception e) {
+            // send result
+            CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), -1);
+            agentClient.send(response);
         }
     }
 
@@ -104,10 +156,15 @@ public class Agent implements Runnable {
      */
     private void sendPeriodicHeartbeat() {
         TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
-
-        scheduler.scheduleAtFixedRate(null, Duration.ofMinutes(1), () -> {
-            System.out.println("Sending heartbeat");
-            agentClient.send(new HeartbeatMessage());
+        Duration interval = Duration.ofMinutes(HEARTBEAT_MINUTES_INTERVAL);
+        scheduler.scheduleAtFixedRate(interval, interval, () -> {
+            if (agentClient.isOpen()) {
+                logger.info("Sending heartbeat");
+                agentClient.send(new HeartbeatMessage());
+            } else {
+                logger.info("Trying to reconnect");
+                connectTower();
+            }
         });
     }
 
@@ -150,6 +207,12 @@ public class Agent implements Runnable {
         }
     }
 
+    /**
+     * Minimum API required version
+     *
+     * @return Required API version
+     * @throws IOException On reading properties file
+     */
     private String getVersionApi() throws IOException {
         Properties properties = new Properties();
         properties.load(this.getClass().getResourceAsStream("/META-INF/build-info.properties"));

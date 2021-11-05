@@ -71,7 +71,6 @@ license {
 
 application {
     mainClass.set("io.seqera.tower.agent.Agent")
-    applicationDefaultJvmArgs = ["-agentlib:native-image-agent=config-merge-dir=conf/"]
 }
 
 String gitVersion() {
@@ -116,6 +115,11 @@ graalvmNative {
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
             buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
+            buildArgs.add('--allow-incomplete-classpath')
+            buildArgs.add('--report-unsupported-elements-at-runtime')
+            buildArgs.add('-H:+AddAllCharsets')
+            buildArgs.add('-H:EnableURLProtocols=https,http')
+            buildArgs.add('-H:+ReportExceptionStackTraces')
         }
 
         test {

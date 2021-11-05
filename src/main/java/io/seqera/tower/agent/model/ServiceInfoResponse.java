@@ -14,16 +14,17 @@ package io.seqera.tower.agent.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.micronaut.core.annotation.ReflectiveAccess;
 
 import java.util.Objects;
 
 /**
  * ServiceInfoResponse
  */
+@ReflectiveAccess
 @JsonPropertyOrder({
         ServiceInfoResponse.JSON_PROPERTY_SERVICE_INFO
 })
-
 public class ServiceInfoResponse {
 
     public static final String JSON_PROPERTY_SERVICE_INFO = "serviceInfo";

@@ -14,6 +14,7 @@ package io.seqera.tower.agent.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.micronaut.core.annotation.ReflectiveAccess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.Objects;
 /**
  * ServiceInfo
  */
+@ReflectiveAccess
 @JsonPropertyOrder({
         ServiceInfo.JSON_PROPERTY_VERSION,
         ServiceInfo.JSON_PROPERTY_API_VERSION,
@@ -32,7 +34,6 @@ import java.util.Objects;
         ServiceInfo.JSON_PROPERTY_ALLOW_INSTANCE_CREDENTIALS,
         ServiceInfo.JSON_PROPERTY_LANDING_URL
 })
-
 public class ServiceInfo {
     public static final String JSON_PROPERTY_VERSION = "version";
     private String version;

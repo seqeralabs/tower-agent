@@ -11,6 +11,7 @@
 
 package io.seqera.tower.agent;
 
+import com.sun.security.auth.module.UnixSystem;
 import io.micronaut.configuration.picocli.PicocliRunner;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.http.HttpRequest;
@@ -22,6 +23,7 @@ import io.micronaut.websocket.exceptions.WebSocketClientException;
 import io.seqera.tower.agent.exchange.CommandRequest;
 import io.seqera.tower.agent.exchange.CommandResponse;
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
+import io.seqera.tower.agent.exchange.InfoMessage;
 import io.seqera.tower.agent.model.ServiceInfoResponse;
 import io.seqera.tower.agent.utils.VersionProvider;
 import org.slf4j.Logger;
@@ -36,6 +38,7 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -117,6 +120,7 @@ public class Agent implements Runnable {
                     .blockingFirst();
             agentClient.setConnectCallback(this::connectTower);
             agentClient.setCommandRequestCallback(this::execCommand);
+            sendInfoMessage();
         } catch (URISyntaxException e) {
             logger.error("Invalid URI: {}/agent/{}/connect - {}", url, agentKey, e.getMessage());
         } catch (WebSocketClientException e) {
@@ -180,6 +184,18 @@ public class Agent implements Runnable {
         });
     }
 
+    private void sendInfoMessage() throws IOException {
+        String userName = new UnixSystem().getUsername();
+        String workDir = Paths.get(".").toAbsolutePath().normalize().toString();
+        String agentVersion = getVersion();
+
+        agentClient.send(new InfoMessage(
+                userName,
+                workDir,
+                agentVersion
+        ));
+    }
+
     /**
      * Do some health checks to the Tower API endpoint to verify that it is available and
      * compatible with this Agent.
@@ -226,8 +242,28 @@ public class Agent implements Runnable {
      * @throws IOException On reading properties file
      */
     private String getVersionApi() throws IOException {
+        return getProperties().get("versionApi").toString();
+    }
+
+    /**
+     * Current Agent version
+     *
+     * @return Agent version
+     * @throws IOException On reading properties file
+     */
+    private String getVersion() throws IOException {
+        return getProperties().get("version").toString();
+    }
+
+    /**
+     * Load 'build-info.properties'
+     *
+     * @return Build properties
+     * @throws IOException On reading properties file
+     */
+    private Properties getProperties() throws IOException {
         Properties properties = new Properties();
         properties.load(this.getClass().getResourceAsStream("/META-INF/build-info.properties"));
-        return properties.get("versionApi").toString();
+        return properties;
     }
 }

@@ -22,7 +22,8 @@ import java.io.Serializable;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CommandRequest.class, name = "command-request"),
         @JsonSubTypes.Type(value = CommandResponse.class, name = "command-response"),
-        @JsonSubTypes.Type(value = HeartbeatMessage.class, name = "heartbeat")
+        @JsonSubTypes.Type(value = HeartbeatMessage.class, name = "heartbeat"),
+        @JsonSubTypes.Type(value = InfoMessage.class, name = "info")
 })
 public abstract class AgentMessage implements Serializable {
 }

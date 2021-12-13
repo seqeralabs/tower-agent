@@ -38,6 +38,7 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
@@ -63,14 +64,17 @@ public class Agent implements Runnable {
     public static final int HEARTBEAT_MINUTES_INTERVAL = 1;
     private static Logger logger = LoggerFactory.getLogger(Agent.class);
 
-    @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent", arity = "1")
+    @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent.", arity = "1")
     String agentKey;
 
-    @Option(names = {"-t", "--access-token"}, description = "Tower personal access token (TOWER_ACCESS_TOKEN)", defaultValue = "${TOWER_ACCESS_TOKEN}", required = true)
+    @Option(names = {"-t", "--access-token"}, description = "Tower personal access token. If not provided TOWER_ACCESS_TOKEN variable will be used.", defaultValue = "${TOWER_ACCESS_TOKEN}", required = true)
     String token;
 
-    @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. Defaults to tower.nf (TOWER_API_ENDPOINT)", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
+    @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
     String url;
+
+    @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: $HOME/work].", defaultValue = "${HOME}/work")
+    Path workDir;
 
     private ApplicationContext ctx;
     private AgentClientSocket agentClient;
@@ -179,7 +183,7 @@ public class Agent implements Runnable {
 
     private void sendInfoMessage() throws IOException {
         String userName = new UnixSystem().getUsername();
-        String workDir = Paths.get(".").toAbsolutePath().normalize().toString();
+        String workDir = this.workDir.toAbsolutePath().normalize().toString();
         String agentVersion = getVersion();
 
         agentClient.send(new InfoMessage(

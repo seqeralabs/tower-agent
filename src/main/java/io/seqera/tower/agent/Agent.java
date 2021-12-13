@@ -72,9 +72,6 @@ public class Agent implements Runnable {
     @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. Defaults to tower.nf (TOWER_API_ENDPOINT)", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
     String url;
 
-    @Option(names = {"--no-secure"}, description = "Explicitly allow to connect to a non-SSL secured Tower server (this is not recommended)")
-    boolean noSecure;
-
     private ApplicationContext ctx;
     private AgentClientSocket agentClient;
 
@@ -104,13 +101,9 @@ public class Agent implements Runnable {
     private void connectTower() {
         try {
             final URI uri = new URI(url + "/agent/" + agentKey + "/connect");
-            if (!uri.getScheme().equals("https") && !noSecure) {
+            if (!uri.getScheme().equals("https")) {
                 logger.error("You are trying to connect to an insecure server: {}", url);
-                logger.error("if you want to force the connection use '--no-secure' option. NOT RECOMMENDED!");
                 System.exit(-1);
-            }
-            if (!uri.getScheme().equals("https") && noSecure) {
-                logger.warn("You are connecting using an INSECURE CONNECTION: {}", url);
             }
 
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);

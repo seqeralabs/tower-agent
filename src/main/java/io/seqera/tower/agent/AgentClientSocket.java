@@ -47,7 +47,8 @@ abstract class AgentClientSocket implements AutoCloseable {
     void onOpen(WebSocketSession session) {
         this.session = session;
         this.openingTime = Instant.now();
-        logger.info("Client opened connection");
+        logger.info("Connection to Tower established");
+        logger.debug("Websocket session URL: {}", session.getRequestURI());
     }
 
     @OnMessage

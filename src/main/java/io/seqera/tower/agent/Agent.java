@@ -39,7 +39,6 @@ import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +61,7 @@ import java.util.concurrent.TimeoutException;
 )
 public class Agent implements Runnable {
     public static final int HEARTBEAT_MINUTES_INTERVAL = 1;
-    private static Logger logger = LoggerFactory.getLogger(Agent.class);
+    private static final Logger logger = LoggerFactory.getLogger(Agent.class);
 
     @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent.", arity = "1")
     String agentKey;
@@ -76,7 +75,7 @@ public class Agent implements Runnable {
     @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: $HOME/work].", defaultValue = "${HOME}/work")
     Path workDir;
 
-    private ApplicationContext ctx;
+    private final ApplicationContext ctx;
     private AgentClientSocket agentClient;
 
     Agent() {
@@ -139,7 +138,8 @@ public class Agent implements Runnable {
      */
     private void execCommand(CommandRequest message) {
         try {
-            logger.info("Execute: {}", message.getCommand());
+            logger.info("Executing request {}", message.getId());
+            logger.trace("REQUEST: {}", message);
             Process process = new ProcessBuilder().command("sh", "-c", message.getCommand()).start();
             int exitStatus = process.waitFor();
             // read the stdout
@@ -154,9 +154,9 @@ public class Agent implements Runnable {
 
             // send result
             CommandResponse response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
-            logger.info("Sending response --> {}", response);
+            logger.info("Sending response {}'", response.getId());
+            logger.trace("RESPONSE: {}", response);
             agentClient.send(response);
-            logger.info("Response sent");
         } catch (Exception e) {
             // send result
             CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), -1);

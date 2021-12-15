@@ -38,7 +38,10 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -72,9 +75,11 @@ public class Agent implements Runnable {
     @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
     String url;
 
-    @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: $HOME/work].", defaultValue = "${HOME}/work")
+    @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: ~/work].")
     Path workDir;
 
+    private String validatedWorkDir;
+    private String validatedUserName;
     private final ApplicationContext ctx;
     private AgentClientSocket agentClient;
 
@@ -89,12 +94,13 @@ public class Agent implements Runnable {
     @Override
     public void run() {
         try {
+            validateParameters();
             checkTower();
             connectTower();
             sendPeriodicHeartbeat();
         } catch (Exception e) {
             logger.error(e.getMessage());
-            System.exit(-1);
+            System.exit(1);
         }
     }
 
@@ -106,7 +112,7 @@ public class Agent implements Runnable {
             final URI uri = new URI(url + "/agent/" + agentKey + "/connect");
             if (!uri.getScheme().equals("https")) {
                 logger.error("You are trying to connect to an insecure server: {}", url);
-                System.exit(-1);
+                System.exit(1);
             }
 
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
@@ -159,7 +165,7 @@ public class Agent implements Runnable {
             agentClient.send(response);
         } catch (Exception e) {
             // send result
-            CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), -1);
+            CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), 1);
             agentClient.send(response);
         }
     }
@@ -182,15 +188,51 @@ public class Agent implements Runnable {
     }
 
     private void sendInfoMessage() throws IOException {
-        String userName = new UnixSystem().getUsername();
-        String workDir = this.workDir.toAbsolutePath().normalize().toString();
-        String agentVersion = getVersion();
-
         agentClient.send(new InfoMessage(
-                userName,
-                workDir,
-                agentVersion
+                validatedUserName,
+                validatedWorkDir,
+                getVersion()
         ));
+    }
+
+    /**
+     * Validate and set default values of all Agent configurable parameters
+     *
+     * @throws IOException
+     */
+    private void validateParameters() throws IOException {
+        // Fetch username
+        validatedUserName = System.getProperty("user.name");
+        if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank()) {
+            logger.error("Impossible to detect current Unix username.");
+            System.exit(1);
+        }
+
+        // Set default workDir
+        if (workDir == null) {
+            logger.debug("No work directory provided. Using default ~/work.");
+            String defaultPath = System.getProperty("user.home") + "/work";
+            try {
+                workDir = Paths.get(defaultPath);
+            } catch (InvalidPathException e) {
+                logger.error("Impossible to define a default work directory. Please provide one using '--work-dir'.");
+                System.exit(1);
+            }
+        }
+
+        // Validate workDir exists
+        if (!Files.exists(workDir)) {
+            logger.error("The work directory '{}' do not exists. Create it or provide a different one using '--work-dir'.", workDir);
+            System.exit(1);
+        }
+        validatedWorkDir = workDir.toAbsolutePath().normalize().toString();
+
+        String agentVersion = getVersion();
+        String requiredApiVersion = getVersionApi();
+
+        logger.info("TOWER AGENT v{}", agentVersion);
+        logger.info("Compatible with TOWER API v{}", requiredApiVersion);
+        logger.info("Connecting as user '{}' with default work directory '{}'", validatedUserName, validatedWorkDir);
     }
 
     /**
@@ -210,7 +252,7 @@ public class Agent implements Runnable {
 
                 if (systemApiVersion.compareTo(requiredApiVersion) < 0) {
                     logger.error("Tower at '{}' is running API version {} and the agent needs a minimum of {}", url, systemApiVersion, requiredApiVersion);
-                    System.exit(-1);
+                    System.exit(1);
                 }
             }
         } catch (Exception e) {
@@ -219,7 +261,7 @@ public class Agent implements Runnable {
             } else {
                 logger.error("Tower API endpoint '{}' it is not available (did you mean '{}/api'?)", url, url);
             }
-            System.exit(-1);
+            System.exit(1);
         }
 
         try {
@@ -228,7 +270,7 @@ public class Agent implements Runnable {
             httpClient.retrieve(req).blockingFirst();
         } catch (Exception e) {
             logger.error("Invalid TOWER_ACCESS_TOKEN, check that the given token has access at '{}'.", url);
-            System.exit(-1);
+            System.exit(1);
         }
     }
 

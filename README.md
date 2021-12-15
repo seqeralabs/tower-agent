@@ -11,7 +11,7 @@ Tower Agent it is distributed as a single binary executable file. You only need 
 
 1. Download the latest Agent binary from Github: 
 ```
-wget https://github.com/seqeralabs/tower-agent/releases/download/v0.2.1/tw-agent-0.2.1-linux-x86_64 -O tw-agent
+curl -fSL https://github.com/seqeralabs/tower-agent/releases/latest/download/tw-agent-linux-x86_64 > tw-agent
 ```
 
 2. Make it executable:

@@ -38,7 +38,10 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -72,9 +75,11 @@ public class Agent implements Runnable {
     @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
     String url;
 
-    @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: $HOME/work].", defaultValue = "${HOME}/work")
+    @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: ~/work].")
     Path workDir;
 
+    private String validatedWorkDir;
+    private String validatedUserName;
     private final ApplicationContext ctx;
     private AgentClientSocket agentClient;
 
@@ -89,6 +94,7 @@ public class Agent implements Runnable {
     @Override
     public void run() {
         try {
+            validateParameters();
             checkTower();
             connectTower();
             sendPeriodicHeartbeat();
@@ -182,15 +188,38 @@ public class Agent implements Runnable {
     }
 
     private void sendInfoMessage() throws IOException {
-        String userName = new UnixSystem().getUsername();
-        String workDir = this.workDir.toAbsolutePath().normalize().toString();
-        String agentVersion = getVersion();
-
         agentClient.send(new InfoMessage(
-                userName,
-                workDir,
-                agentVersion
+                validatedUserName,
+                validatedWorkDir,
+                getVersion()
         ));
+    }
+
+    private void validateParameters() {
+        // Fetch username
+        validatedUserName = System.getProperty("user.name");
+        if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank()) {
+            logger.error("Impossible to detect current Unix username.");
+            System.exit(-1);
+        }
+
+        // Set default workDir
+        if (workDir == null) {
+            String defaultPath = System.getProperty("user.home") + "/work";
+            try {
+                workDir = Paths.get(defaultPath);
+            } catch (InvalidPathException e) {
+                logger.error("Impossible to define a default work directory. Please provide one using '--work-dir'.");
+                System.exit(-1);
+            }
+        }
+
+        // Validate workDir exists
+        if (!Files.exists(workDir)) {
+            logger.error("The work directory '{}' do not exists. Create it or provide a different one using '--work-dir'.", workDir);
+            System.exit(-1);
+        }
+        validatedWorkDir = workDir.toAbsolutePath().normalize().toString();
     }
 
     /**

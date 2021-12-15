@@ -195,6 +195,11 @@ public class Agent implements Runnable {
         ));
     }
 
+    /**
+     * Validate and set default values of all Agent configurable parameters
+     *
+     * @throws IOException
+     */
     private void validateParameters() throws IOException {
         // Fetch username
         validatedUserName = System.getProperty("user.name");
@@ -205,6 +210,7 @@ public class Agent implements Runnable {
 
         // Set default workDir
         if (workDir == null) {
+            logger.debug("No work directory provided. Using default ~/work.");
             String defaultPath = System.getProperty("user.home") + "/work";
             try {
                 workDir = Paths.get(defaultPath);

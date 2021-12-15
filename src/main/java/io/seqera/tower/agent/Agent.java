@@ -195,7 +195,7 @@ public class Agent implements Runnable {
         ));
     }
 
-    private void validateParameters() {
+    private void validateParameters() throws IOException {
         // Fetch username
         validatedUserName = System.getProperty("user.name");
         if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank()) {
@@ -220,6 +220,13 @@ public class Agent implements Runnable {
             System.exit(-1);
         }
         validatedWorkDir = workDir.toAbsolutePath().normalize().toString();
+
+        String agentVersion = getVersion();
+        String requiredApiVersion = getVersionApi();
+
+        logger.info("TOWER AGENT v{}", agentVersion);
+        logger.info("Compatible with TOWER API v{}", requiredApiVersion);
+        logger.info("Connecting as user '{}' with default work directory '{}'", validatedUserName, validatedWorkDir);
     }
 
     /**

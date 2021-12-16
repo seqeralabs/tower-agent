@@ -203,8 +203,8 @@ public class Agent implements Runnable {
     private void validateParameters() throws IOException {
         // Fetch username
         validatedUserName = System.getenv().getOrDefault("USER", System.getProperty("user.name"));
-        if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank()) {
-            logger.error("Impossible to detect current Unix username.");
+        if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank() || validatedUserName.equals("?")) {
+            logger.error("Impossible to detect current Unix username. Try setting USER environment variable.");
             System.exit(1);
         }
 

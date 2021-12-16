@@ -32,29 +32,32 @@ Running the Agent:
 
 - The agent has to be always running to accept incoming requests from Tower. For this we recommend that you run it using a terminal multiplexer like [tmux](https://github.com/tmux/tmux) or [GNU Screen](https://www.gnu.org/software/screen/), so that it keeps running even if you close the SSH session.
 ```
-./tw-agent -t <your personal access token> <your agent connection ID>
+export TOWER_ACCESS_TOKEN=<YOUR TOKEN>
+./tw-agent <your agent connection ID>
 ```
 
 ### Tips
 
-- Alternative you can define the `TOWER_ACCESS_TOKEN` environment variable, and then you don't need to pass the personal access token as an option.
 - If you are using an on premises Tower you can set the API url using `TOWER_API_ENDPOINT` environment variable or the `--url` option.
+- By default, the Agent uses the folder `~/work` at your home as working directory. You can change it using the `--work-dir` option.
+- The work directory must exist before running the agent.
+- You can also change the work directory at Tower when you create a compute environment or pipeline.
 
 ### Usage
 ```
+
 Usage: tw-agent [OPTIONS] AGENT_CONNECTION_ID
 
 Nextflow Tower Agent
 
 Parameters:
-*     AGENT_CONNECTION_ID   Agent connection ID to identify this agent
+*     AGENT_CONNECTION_ID    Agent connection ID to identify this agent.
 
 Options:
-  -t, --access-token=<token>
-                            Tower personal access token (TOWER_ACCESS_TOKEN)
-  -u, --url=<url>           Tower server API endpoint URL. Defaults to tower.nf (TOWER_API_ENDPOINT)
-      --no-secure           Explicitly allow to connect to a non-SSL secured Tower server (this is not recommended)
-  -h, --help                Show this help message and exit.
-  -V, --version             Print version information and exit.
+* -t, --access-token=<token> Tower personal access token. If not provided TOWER_ACCESS_TOKEN variable will be used.
+  -u, --url=<url>            Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].
+  -w, --work-dir=<workDir>   Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: ~/work].
+  -h, --help                 Show this help message and exit.
+  -V, --version              Print version information and exit.
 
 ```

@@ -11,7 +11,6 @@
 
 package io.seqera.tower.agent;
 
-import com.sun.security.auth.module.UnixSystem;
 import io.micronaut.configuration.picocli.PicocliRunner;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.http.HttpRequest;
@@ -64,6 +63,7 @@ import java.util.concurrent.TimeoutException;
 )
 public class Agent implements Runnable {
     public static final int HEARTBEAT_MINUTES_INTERVAL = 1;
+    public static final int MAX_WEBSOCKET_PAYLOAD_SIZE = 5242880;
     private static final Logger logger = LoggerFactory.getLogger(Agent.class);
 
     @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent.", arity = "1")
@@ -125,8 +125,10 @@ public class Agent implements Runnable {
             sendInfoMessage();
         } catch (URISyntaxException e) {
             logger.error("Invalid URI: {}/agent/{}/connect - {}", url, agentKey, e.getMessage());
+            System.exit(1);
         } catch (WebSocketClientException e) {
             logger.error("Connection error - {}", e.getMessage());
+            System.exit(1);
         } catch (Exception e) {
             if (e.getCause() instanceof TimeoutException) {
                 logger.error("Connection timeout [trying to reconnect in {} minutes]", HEARTBEAT_MINUTES_INTERVAL);
@@ -134,6 +136,7 @@ public class Agent implements Runnable {
                 logger.error("Unknown problem");
                 e.printStackTrace();
             }
+            System.exit(1);
         }
     }
 
@@ -143,11 +146,14 @@ public class Agent implements Runnable {
      * @param message Command request message
      */
     private void execCommand(CommandRequest message) {
+        CommandResponse response;
+
         try {
-            logger.info("Executing request {}", message.getId());
-            logger.trace("REQUEST: {}", message);
-            Process process = new ProcessBuilder().command("sh", "-c", message.getCommand()).start();
-            int exitStatus = process.waitFor();
+            Process process = new ProcessBuilder()
+                    .command("sh", "-c", message.getCommand())
+                    .redirectErrorStream(true)
+                    .start();
+
             // read the stdout
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder builder = new StringBuilder();
@@ -156,18 +162,25 @@ public class Agent implements Runnable {
                 builder.append(line);
                 builder.append("\n");
             }
-            String result = builder.toString();
 
-            // send result
-            CommandResponse response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
-            logger.info("Sending response {}'", response.getId());
-            logger.trace("RESPONSE: {}", response);
-            agentClient.send(response);
-        } catch (Exception e) {
-            // send result
-            CommandResponse response = new CommandResponse(message.getId(), e.getMessage().getBytes(), 1);
-            agentClient.send(response);
+            // truncate response to fit the maximum websocket size
+            if (builder.length() > (MAX_WEBSOCKET_PAYLOAD_SIZE - 100)) {
+                logger.warn("Response to [{}] '{}' was truncated", message.getId(), message.getCommand());
+                builder.setLength(MAX_WEBSOCKET_PAYLOAD_SIZE - 100);
+            }
+
+            String result = builder.toString();
+            process.waitFor(10, TimeUnit.SECONDS);
+            int exitStatus = process.exitValue();
+            process.destroy();
+            response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
+        } catch (Throwable e) {
+            response = new CommandResponse(message.getId(), e.getMessage().getBytes(), 1);
         }
+        // send result
+        logger.info("Sending response {}'", response.getId());
+        logger.trace("RESPONSE: {}", response);
+        agentClient.sendAsync(response);
     }
 
     /**

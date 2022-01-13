@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 /**
@@ -51,7 +52,7 @@ abstract class AgentClientSocket implements AutoCloseable {
         logger.debug("Websocket session URL: {}", session.getRequestURI());
     }
 
-    @OnMessage
+    @OnMessage(maxPayloadLength=Agent.MAX_WEBSOCKET_PAYLOAD_SIZE)
     void onMessage(AgentMessage message) {
         if (message instanceof HeartbeatMessage) {
             logger.info("Received heartbeat");
@@ -91,6 +92,8 @@ abstract class AgentClientSocket implements AutoCloseable {
     }
 
     abstract void send(AgentMessage message);
+
+    public abstract Future<String> sendAsync(AgentMessage message);
 
     public boolean isOpen() {
         return session.isOpen();

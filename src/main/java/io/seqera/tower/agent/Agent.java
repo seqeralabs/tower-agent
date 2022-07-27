@@ -115,6 +115,7 @@ public class Agent implements Runnable {
                 System.exit(1);
             }
 
+            logger.trace("Connecting to {}", uri);
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
             final RxWebSocketClient webSocketClient = ctx.getBean(RxWebSocketClient.class);
             agentClient = webSocketClient.connect(AgentClientSocket.class, req)
@@ -146,6 +147,8 @@ public class Agent implements Runnable {
      * @param message Command request message
      */
     private void execCommand(CommandRequest message) {
+        logger.trace("REQUEST: {}", message);
+
         CommandResponse response;
 
         try {

@@ -107,8 +107,9 @@ graalvmNative {
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
+
             configurationFileDirectories.from(file('conf'))
-            buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
+            buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static'] : [])
             buildArgs.add('--allow-incomplete-classpath')
             buildArgs.add('--report-unsupported-elements-at-runtime')
             buildArgs.add('-H:+AddAllCharsets')

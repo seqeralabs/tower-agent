@@ -9,6 +9,10 @@ project:
   extraProperties:
     inceptionYear: 2021
 
+  java:
+    groupId: io.seqera.tower.agent
+    version: 11
+
 release:
   github:
     overwrite: true

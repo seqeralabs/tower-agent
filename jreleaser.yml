@@ -79,3 +79,7 @@ distributions:
       - path: "tw_agent_linux/tw-agent"
         transform: "{{distributionName}}-linux-x86_64"
         platform: linux-x86_64
+  tw-agent-jar:
+    type: SINGLE_JAR
+    artifacts:
+      - path: "tw_agent_jar/tw-agent.jar"

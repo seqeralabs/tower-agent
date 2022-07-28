@@ -47,11 +47,21 @@ jobs:
       - name: Build Native Image
         run: ./gradlew nativeCompile
 
+      - name: Build fat JAR
+        run: ./gradlew shadowJar
+
       - name: Upload linux native image artifact
         uses: actions/upload-artifact@v2
         with:
           name: tw_agent_linux
           path: build/native/nativeCompile/tw-agent
+
+      - name: Upload fat JAR artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: tw_agent_jar
+          path: build/libs/tw-agent.jar
+          
 
   release:
     name: Release

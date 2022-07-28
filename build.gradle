@@ -15,9 +15,10 @@ plugins {
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'org.graalvm.buildtools.native'
     id("io.micronaut.application") version "2.0.6"
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
-version = "0.1"
+version = project.file('VERSION').text.strip()
 group = "io.seqera.tower.agent"
 
 repositories {
@@ -94,6 +95,12 @@ compileJava {
     targetCompatibility = JavaVersion.toVersion("11")
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn buildInfo
+}
+
+shadowJar {
+    archiveBaseName.set('tw-agent')
+    archiveClassifier.set('')
+    archiveVersion.set('')
 }
 
 test {

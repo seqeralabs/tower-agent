@@ -62,7 +62,7 @@ import java.util.concurrent.TimeoutException;
         optionListHeading = "%nOptions:%n"
 )
 public class Agent implements Runnable {
-    public static final int HEARTBEAT_MINUTES_INTERVAL = 1;
+    public static final int HEARTBEAT_SECONDS_INTERVAL = 45;
     public static final int MAX_WEBSOCKET_PAYLOAD_SIZE = 5242880;
     private static final Logger logger = LoggerFactory.getLogger(Agent.class);
 
@@ -104,10 +104,17 @@ public class Agent implements Runnable {
         }
     }
 
+    private void connectTowerDelay() {
+        TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
+        Duration delay = Duration.ofSeconds(2);
+        scheduler.schedule(delay, this::connectTower);
+    }
+
     /**
      * Connect the agent to Tower using websockets
      */
     private void connectTower() {
+        logger.info("Connecting to Tower");
         try {
             final URI uri = new URI(url + "/agent/" + agentKey + "/connect");
             if (!uri.getScheme().equals("https")) {
@@ -120,7 +127,7 @@ public class Agent implements Runnable {
             agentClient = webSocketClient.connect(AgentClientSocket.class, req)
                     .timeout(5, TimeUnit.SECONDS)
                     .blockingFirst();
-            agentClient.setConnectCallback(this::connectTower);
+            agentClient.setConnectCallback(this::connectTowerDelay);
             agentClient.setCommandRequestCallback(this::execCommand);
             sendInfoMessage();
         } catch (URISyntaxException e) {
@@ -131,7 +138,7 @@ public class Agent implements Runnable {
             System.exit(1);
         } catch (Exception e) {
             if (e.getCause() instanceof TimeoutException) {
-                logger.error("Connection timeout [trying to reconnect in {} minutes]", HEARTBEAT_MINUTES_INTERVAL);
+                logger.error("Connection timeout [trying to reconnect in {} seconds]", HEARTBEAT_SECONDS_INTERVAL);
             } else {
                 logger.error("Unknown problem");
                 e.printStackTrace();
@@ -188,8 +195,8 @@ public class Agent implements Runnable {
      */
     private void sendPeriodicHeartbeat() {
         TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
-        Duration interval = Duration.ofMinutes(HEARTBEAT_MINUTES_INTERVAL);
-        scheduler.scheduleAtFixedRate(interval, interval, () -> {
+        Duration interval = Duration.ofSeconds(HEARTBEAT_SECONDS_INTERVAL);
+        scheduler.scheduleWithFixedDelay(interval, interval, () -> {
             if (agentClient.isOpen()) {
                 logger.info("Sending heartbeat");
                 agentClient.send(new HeartbeatMessage());

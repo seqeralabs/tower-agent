@@ -11,6 +11,7 @@
 
 package io.seqera.tower.agent;
 
+import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.websocket.CloseReason;
 import io.micronaut.websocket.WebSocketSession;
 import io.micronaut.websocket.annotation.ClientWebSocket;
@@ -78,16 +79,19 @@ abstract class AgentClientSocket implements AutoCloseable {
 
         if (reason.getCode() == 4001) {
             logger.info("Closing to reauthenticate the session");
-            if (connectCallback != null) {
-                connectCallback.run();
-            }
             return;
+        } else {
+            logger.info("Closed for unknown reason after");
+            if (openingTime != null) {
+                Duration d = Duration.between(openingTime, Instant.now());
+                String duration = String.format("%sd %sh %sm %ss", d.toDaysPart(), d.toHoursPart(), d.toMinutesPart(), d.toSecondsPart());
+                logger.info("Session duration {}", duration);
+            }
         }
 
-        if (openingTime != null) {
-            Duration d = Duration.between(openingTime, Instant.now());
-            String duration = String.format("%sd %sh %sm %ss", d.toDaysPart(), d.toHoursPart(), d.toMinutesPart(), d.toSecondsPart());
-            logger.info("Closed after {}. [trying to reconnect in {} minutes]", duration, Agent.HEARTBEAT_MINUTES_INTERVAL);
+        if (connectCallback != null) {
+            logger.info("Reconnecting in 2 seconds");
+            connectCallback.run();
         }
     }
 

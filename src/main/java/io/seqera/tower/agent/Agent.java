@@ -13,6 +13,7 @@ package io.seqera.tower.agent;
 
 import io.micronaut.configuration.picocli.PicocliRunner;
 import io.micronaut.context.ApplicationContext;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.rxjava2.http.client.RxHttpClient;
@@ -62,9 +63,11 @@ import java.util.concurrent.TimeoutException;
         optionListHeading = "%nOptions:%n"
 )
 public class Agent implements Runnable {
-    public static final int HEARTBEAT_SECONDS_INTERVAL = 45;
     public static final int MAX_WEBSOCKET_PAYLOAD_SIZE = 5242880;
     private static final Logger logger = LoggerFactory.getLogger(Agent.class);
+
+    @Value("${tower.agent.heartbeat:`45s`}")
+    Duration heartbeatDelay;
 
     @Parameters(index = "0", paramLabel = "AGENT_CONNECTION_ID", description = "Agent connection ID to identify this agent.", arity = "1")
     String agentKey;
@@ -138,7 +141,7 @@ public class Agent implements Runnable {
             System.exit(1);
         } catch (Exception e) {
             if (e.getCause() instanceof TimeoutException) {
-                logger.error("Connection timeout [trying to reconnect in {} seconds]", HEARTBEAT_SECONDS_INTERVAL);
+                logger.error("Connection timeout [trying to reconnect in {} seconds]", heartbeatDelay);
             } else {
                 logger.error("Unknown problem");
                 e.printStackTrace();
@@ -195,8 +198,7 @@ public class Agent implements Runnable {
      */
     private void sendPeriodicHeartbeat() {
         TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
-        Duration interval = Duration.ofSeconds(HEARTBEAT_SECONDS_INTERVAL);
-        scheduler.scheduleWithFixedDelay(interval, interval, () -> {
+        scheduler.scheduleWithFixedDelay(heartbeatDelay, heartbeatDelay, () -> {
             if (agentClient.isOpen()) {
                 logger.info("Sending heartbeat");
                 agentClient.send(new HeartbeatMessage());

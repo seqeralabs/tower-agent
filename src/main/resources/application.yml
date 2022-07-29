@@ -12,3 +12,7 @@
 micronaut:
   application:
     name: towerAgent
+
+tower:
+  agent:
+    heartbeat: "${TOWER_AGENT_HEARTBEAT:`45s`}"

@@ -38,6 +38,7 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -106,7 +107,6 @@ public class Agent implements Runnable {
                 }
                 Thread.sleep(2000);
             }
-
         } catch (Exception e) {
             logger.error(e.getMessage());
             System.exit(1);
@@ -137,15 +137,14 @@ public class Agent implements Runnable {
             System.exit(1);
         } catch (WebSocketClientException e) {
             logger.error("Connection error - {}", e.getMessage());
-            System.exit(1);
+        } catch (UnknownHostException e) {
+            logger.error("Unknown host exception - Check that it's a valid DNS domain.");
         } catch (Exception e) {
             if (e.getCause() instanceof TimeoutException) {
-                logger.error("Connection timeout [trying to reconnect in {} seconds]", heartbeatDelay);
+                logger.error("Connection timeout");
             } else {
-                logger.error("Unknown problem");
-                e.printStackTrace();
+                logger.error("Unknown problem - {}", e.getMessage());
             }
-            System.exit(1);
         }
     }
 
@@ -280,7 +279,7 @@ public class Agent implements Runnable {
             } else {
                 logger.error("Tower API endpoint '{}' it is not available (did you mean '{}/api'?)", url, url);
             }
-            System.exit(1);
+            return;
         }
 
         try {
@@ -289,7 +288,6 @@ public class Agent implements Runnable {
             httpClient.retrieve(req).blockingFirst();
         } catch (Exception e) {
             logger.error("Invalid TOWER_ACCESS_TOKEN, check that the given token has access at '{}'.", url);
-            System.exit(1);
         }
     }
 

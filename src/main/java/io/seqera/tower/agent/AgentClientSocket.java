@@ -39,9 +39,6 @@ abstract class AgentClientSocket implements AutoCloseable {
     private WebSocketSession session;
     private Instant openingTime;
 
-    // Callback to reconnect the agent
-    private Runnable connectCallback;
-
     // Callback to manage a command request
     private Consumer<CommandRequest> commandRequestCallback;
 
@@ -79,7 +76,6 @@ abstract class AgentClientSocket implements AutoCloseable {
 
         if (reason.getCode() == 4001) {
             logger.info("Closing to reauthenticate the session");
-            return;
         } else {
             logger.info("Closed for unknown reason after");
             if (openingTime != null) {
@@ -87,11 +83,6 @@ abstract class AgentClientSocket implements AutoCloseable {
                 String duration = String.format("%sd %sh %sm %ss", d.toDaysPart(), d.toHoursPart(), d.toMinutesPart(), d.toSecondsPart());
                 logger.info("Session duration {}", duration);
             }
-        }
-
-        if (connectCallback != null) {
-            logger.info("Reconnecting in 2 seconds");
-            connectCallback.run();
         }
     }
 
@@ -103,12 +94,12 @@ abstract class AgentClientSocket implements AutoCloseable {
         return session.isOpen();
     }
 
-    public void setConnectCallback(Runnable connectCallback) {
-        this.connectCallback = connectCallback;
-    }
-
     public void setCommandRequestCallback(Consumer<CommandRequest> callback) {
         this.commandRequestCallback = callback;
+    }
+
+    public String getId() {
+        return session.getId();
     }
 
 

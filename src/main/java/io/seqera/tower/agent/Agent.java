@@ -98,19 +98,19 @@ public class Agent implements Runnable {
     public void run() {
         try {
             validateParameters();
-            checkTower();
-            connectTower();
             sendPeriodicHeartbeat();
+            while (true) {
+                if (agentClient == null || !agentClient.isOpen()) {
+                    checkTower();
+                    connectTower();
+                }
+                Thread.sleep(2000);
+            }
+
         } catch (Exception e) {
             logger.error(e.getMessage());
             System.exit(1);
         }
-    }
-
-    private void connectTowerDelay() {
-        TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
-        Duration delay = Duration.ofSeconds(2);
-        scheduler.schedule(delay, this::connectTower);
     }
 
     /**
@@ -130,7 +130,6 @@ public class Agent implements Runnable {
             agentClient = webSocketClient.connect(AgentClientSocket.class, req)
                     .timeout(5, TimeUnit.SECONDS)
                     .blockingFirst();
-            agentClient.setConnectCallback(this::connectTowerDelay);
             agentClient.setCommandRequestCallback(this::execCommand);
             sendInfoMessage();
         } catch (URISyntaxException e) {
@@ -199,12 +198,10 @@ public class Agent implements Runnable {
     private void sendPeriodicHeartbeat() {
         TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
         scheduler.scheduleWithFixedDelay(heartbeatDelay, heartbeatDelay, () -> {
-            if (agentClient.isOpen()) {
+            if (agentClient != null && agentClient.isOpen()) {
                 logger.info("Sending heartbeat");
+                logger.trace("websocket session '{}'", agentClient.getId());
                 agentClient.send(new HeartbeatMessage());
-            } else {
-                logger.info("Trying to reconnect");
-                connectTower();
             }
         });
     }

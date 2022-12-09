@@ -103,11 +103,11 @@ public class Agent implements Runnable {
             validateParameters();
             sendPeriodicHeartbeat();
             infiniteLoop();
-        } catch (Throwable e) {
+        } catch (UnrecoverableException e) {
             logger.error(e.getMessage());
-            if (logger.isTraceEnabled()) {
-                e.printStackTrace();
-            }
+            System.exit(1);
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
             System.exit(1);
         }
     }

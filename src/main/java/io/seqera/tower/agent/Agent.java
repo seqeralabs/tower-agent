@@ -20,6 +20,8 @@ import io.micronaut.rxjava2.http.client.RxHttpClient;
 import io.micronaut.rxjava2.http.client.websockets.RxWebSocketClient;
 import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.websocket.exceptions.WebSocketClientException;
+import io.seqera.tower.agent.exceptions.RecoverableException;
+import io.seqera.tower.agent.exceptions.UnrecoverableException;
 import io.seqera.tower.agent.exchange.CommandRequest;
 import io.seqera.tower.agent.exchange.CommandResponse;
 import io.seqera.tower.agent.exchange.HeartbeatMessage;
@@ -38,6 +40,7 @@ import java.io.InputStreamReader;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -98,19 +101,30 @@ public class Agent implements Runnable {
     public void run() {
         try {
             validateParameters();
-            checkTower();
-            connectTower();
             sendPeriodicHeartbeat();
-        } catch (Exception e) {
+            infiniteLoop();
+        } catch (UnrecoverableException e) {
             logger.error(e.getMessage());
+            System.exit(1);
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
             System.exit(1);
         }
     }
 
-    private void connectTowerDelay() {
-        TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
-        Duration delay = Duration.ofSeconds(2);
-        scheduler.schedule(delay, this::connectTower);
+    private void infiniteLoop() throws InterruptedException, IOException {
+        while (true) {
+            try {
+                if (agentClient == null || !agentClient.isOpen()) {
+                    checkTower();
+                    connectTower();
+                }
+            } catch (RecoverableException e) {
+                logger.error(e.getMessage());
+            }
+
+            Thread.sleep(2000);
+        }
     }
 
     /**
@@ -121,8 +135,7 @@ public class Agent implements Runnable {
         try {
             final URI uri = new URI(url + "/agent/" + agentKey + "/connect");
             if (!uri.getScheme().equals("https")) {
-                logger.error("You are trying to connect to an insecure server: {}", url);
-                System.exit(1);
+                throw new UnrecoverableException(String.format("You are trying to connect to an insecure server: %s", url));
             }
 
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
@@ -130,23 +143,20 @@ public class Agent implements Runnable {
             agentClient = webSocketClient.connect(AgentClientSocket.class, req)
                     .timeout(5, TimeUnit.SECONDS)
                     .blockingFirst();
-            agentClient.setConnectCallback(this::connectTowerDelay);
             agentClient.setCommandRequestCallback(this::execCommand);
             sendInfoMessage();
         } catch (URISyntaxException e) {
-            logger.error("Invalid URI: {}/agent/{}/connect - {}", url, agentKey, e.getMessage());
-            System.exit(1);
+            throw new UnrecoverableException(String.format("Invalid URI: %s/agent/%s/connect - %s", url, agentKey, e.getMessage()));
         } catch (WebSocketClientException e) {
-            logger.error("Connection error - {}", e.getMessage());
-            System.exit(1);
+            throw new RecoverableException(String.format("Connection error - %s", e.getMessage()));
+        } catch (UnknownHostException e) {
+            throw new RecoverableException("Unknown host exception - Check that it's a valid DNS domain.");
         } catch (Exception e) {
             if (e.getCause() instanceof TimeoutException) {
-                logger.error("Connection timeout [trying to reconnect in {} seconds]", heartbeatDelay);
-            } else {
-                logger.error("Unknown problem");
-                e.printStackTrace();
+                throw new RecoverableException(String.format("Connection timeout  -- %s", e.getCause().getMessage()));
             }
-            System.exit(1);
+
+            throw new RecoverableException(String.format("Unknown problem - %s", e.getMessage()), e);
         }
     }
 
@@ -159,6 +169,7 @@ public class Agent implements Runnable {
         CommandResponse response;
 
         try {
+            logger.trace("REQUEST: {}", message.getCommand());
             Process process = new ProcessBuilder()
                     .command("sh", "-c", message.getCommand())
                     .redirectErrorStream(true)
@@ -199,12 +210,10 @@ public class Agent implements Runnable {
     private void sendPeriodicHeartbeat() {
         TaskScheduler scheduler = ctx.getBean(TaskScheduler.class);
         scheduler.scheduleWithFixedDelay(heartbeatDelay, heartbeatDelay, () -> {
-            if (agentClient.isOpen()) {
+            if (agentClient != null && agentClient.isOpen()) {
                 logger.info("Sending heartbeat");
+                logger.trace("websocket session '{}'", agentClient.getId());
                 agentClient.send(new HeartbeatMessage());
-            } else {
-                logger.info("Trying to reconnect");
-                connectTower();
             }
         });
     }
@@ -226,8 +235,7 @@ public class Agent implements Runnable {
         // Fetch username
         validatedUserName = System.getenv().getOrDefault("USER", System.getProperty("user.name"));
         if (validatedUserName == null || validatedUserName.isEmpty() || validatedUserName.isBlank() || validatedUserName.equals("?")) {
-            logger.error("Impossible to detect current Unix username. Try setting USER environment variable.");
-            System.exit(1);
+            throw new UnrecoverableException("Impossible to detect current Unix username. Try setting USER environment variable.");
         }
 
         // Set default workDir
@@ -237,15 +245,13 @@ public class Agent implements Runnable {
             try {
                 workDir = Paths.get(defaultPath);
             } catch (InvalidPathException e) {
-                logger.error("Impossible to define a default work directory. Please provide one using '--work-dir'.");
-                System.exit(1);
+                throw new UnrecoverableException("Impossible to define a default work directory. Please provide one using '--work-dir'.");
             }
         }
 
         // Validate workDir exists
         if (!Files.exists(workDir)) {
-            logger.error("The work directory '{}' do not exists. Create it or provide a different one using '--work-dir'.", workDir);
-            System.exit(1);
+            throw new UnrecoverableException(String.format("The work directory '%s' do not exists. Create it or provide a different one using '--work-dir'.", workDir));
         }
         validatedWorkDir = workDir.toAbsolutePath().normalize().toString();
 
@@ -261,29 +267,27 @@ public class Agent implements Runnable {
      * Do some health checks to the Tower API endpoint to verify that it is available and
      * compatible with this Agent.
      */
-    private void checkTower() {
+    private void checkTower() throws IOException {
         final RxHttpClient httpClient = ctx.getBean(RxHttpClient.class);
+        ServiceInfoResponse infoResponse = null;
         try {
             final URI uri = new URI(url + "/service-info");
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
-
-            ServiceInfoResponse infoResponse = httpClient.retrieve(req, ServiceInfoResponse.class).blockingFirst();
-            if (infoResponse.getServiceInfo() != null && infoResponse.getServiceInfo().getApiVersion() != null) {
-                final ModuleDescriptor.Version systemApiVersion = ModuleDescriptor.Version.parse(infoResponse.getServiceInfo().getApiVersion());
-                final ModuleDescriptor.Version requiredApiVersion = ModuleDescriptor.Version.parse(getVersionApi());
-
-                if (systemApiVersion.compareTo(requiredApiVersion) < 0) {
-                    logger.error("Tower at '{}' is running API version {} and the agent needs a minimum of {}", url, systemApiVersion, requiredApiVersion);
-                    System.exit(1);
-                }
-            }
+            infoResponse = httpClient.retrieve(req, ServiceInfoResponse.class).blockingFirst();
         } catch (Exception e) {
             if (url.contains("/api")) {
-                logger.error("Tower API endpoint '{}' it is not available", url);
-            } else {
-                logger.error("Tower API endpoint '{}' it is not available (did you mean '{}/api'?)", url, url);
+                throw new RecoverableException(String.format("Tower API endpoint '%s' it is not available", url));
             }
-            System.exit(1);
+            throw new RecoverableException(String.format("Tower API endpoint '%s' it is not available (did you mean '%s/api'?)", url, url));
+        }
+
+        if (infoResponse != null && infoResponse.getServiceInfo() != null && infoResponse.getServiceInfo().getApiVersion() != null) {
+            final ModuleDescriptor.Version systemApiVersion = ModuleDescriptor.Version.parse(infoResponse.getServiceInfo().getApiVersion());
+            final ModuleDescriptor.Version requiredApiVersion = ModuleDescriptor.Version.parse(getVersionApi());
+
+            if (systemApiVersion.compareTo(requiredApiVersion) < 0) {
+                throw new UnrecoverableException(String.format("Tower at '%s' is running API version %s and the agent needs a minimum of %s", url, systemApiVersion, requiredApiVersion));
+            }
         }
 
         try {
@@ -291,8 +295,7 @@ public class Agent implements Runnable {
             final MutableHttpRequest<?> req = HttpRequest.GET(uri).bearerAuth(token);
             httpClient.retrieve(req).blockingFirst();
         } catch (Exception e) {
-            logger.error("Invalid TOWER_ACCESS_TOKEN, check that the given token has access at '{}'.", url);
-            System.exit(1);
+            throw new UnrecoverableException(String.format("Invalid TOWER_ACCESS_TOKEN, check that the given token has access at '%s'.", url));
         }
     }
 

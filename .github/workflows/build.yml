@@ -26,13 +26,13 @@ jobs:
           fetch-depth: 1
 
       - name: Setup Graalvm
-          uses: graalvm/setup-graalvm@v1
-          with:
-            java-version: 17
-            distribution: 'graalvm'
-            components: 'native-image'
-            native-image-musl: 'true'
-            github-token: ${{ secrets.GITHUB_TOKEN }}
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: 17
+          distribution: 'graalvm'
+          components: 'native-image'
+          native-image-musl: 'true'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tests
         run: ./gradlew cleanTest test

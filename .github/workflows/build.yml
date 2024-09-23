@@ -28,7 +28,7 @@ jobs:
       - name: Setup Graalvm
         uses: graalvm/setup-graalvm@v1
         with:
-          java-version: 17
+          java-version: '21'
           distribution: 'graalvm'
           components: 'native-image'
           native-image-musl: 'true'
@@ -78,9 +78,9 @@ jobs:
         uses: actions/download-artifact@v2
 
       - name: Setup Java for JReleaser
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: '21'
 
       - name: Version
         id: version

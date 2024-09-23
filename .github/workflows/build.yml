@@ -38,7 +38,7 @@ jobs:
         run: ./gradlew cleanTest test
 
       - name: Tests reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: linux-test-reports
@@ -51,13 +51,13 @@ jobs:
         run: ./gradlew shadowJar
 
       - name: Upload linux native image artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: tw_agent_linux
           path: build/native/nativeCompile/tw-agent
 
       - name: Upload fat JAR artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: tw_agent_jar
           path: build/libs/tw-agent.jar

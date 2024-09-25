@@ -91,8 +91,8 @@ task buildInfo {
 }
 
 compileJava {
-    sourceCompatibility = JavaVersion.toVersion("11")
-    targetCompatibility = JavaVersion.toVersion("11")
+    sourceCompatibility = JavaVersion.toVersion("21")
+    targetCompatibility = JavaVersion.toVersion("21")
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn buildInfo
 }
@@ -121,6 +121,10 @@ graalvmNative {
             buildArgs.add('-H:+AddAllCharsets')
             buildArgs.add('-H:EnableURLProtocols=https,http')
             buildArgs.add('-H:+ReportExceptionStackTraces')
+
+            javaLauncher = javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(17)
+            }
         }
 
         test {

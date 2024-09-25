@@ -11,7 +11,7 @@ project:
 
   java:
     groupId: io.seqera.tower.agent
-    version: 11
+    version: 21
 
 release:
   github:
@@ -80,10 +80,10 @@ distributions:
   tw-agent:
     type: NATIVE_IMAGE
     artifacts:
-      - path: "tw_agent_linux/tw-agent"
+      - path: "tw-agent-linux/tw-agent"
         transform: "{{distributionName}}-linux-x86_64"
         platform: linux-x86_64
   tw-agent-jar:
     type: SINGLE_JAR
     artifacts:
-      - path: "tw_agent_jar/tw-agent.jar"
+      - path: "tw-agent-jar/tw-agent.jar"

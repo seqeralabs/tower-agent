@@ -92,11 +92,19 @@ task buildInfo {
     }
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 compileJava {
-    sourceCompatibility = JavaVersion.toVersion("21")
-    targetCompatibility = JavaVersion.toVersion("21")
-    options.compilerArgs += ["-Aproject=${project.name}"]
-    dependsOn buildInfo
+    options.release.set(17)
+}
+
+tasks.withType(GroovyCompile).configureEach {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 shadowJar {
@@ -123,10 +131,6 @@ graalvmNative {
             buildArgs.add('-H:+AddAllCharsets')
             buildArgs.add('-H:EnableURLProtocols=https,http')
             buildArgs.add('-H:+ReportExceptionStackTraces')
-
-            javaLauncher = javaToolchains.launcherFor {
-                languageVersion = JavaLanguageVersion.of(17)
-            }
         }
 
         test {

@@ -14,8 +14,8 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 plugins {
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'org.graalvm.buildtools.native'
-    id("io.micronaut.application") version "2.0.6"
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id("io.micronaut.application") version "4.4.2"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 version = project.file('VERSION').text.strip()
@@ -52,9 +52,11 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api")
     implementation("javax.inject:javax.inject:1")
     runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("org.yaml:snakeyaml")
     compileOnly("org.graalvm.nativeimage:svm")
 
-    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.validation:micronaut-validation")
+    implementation("io.micronaut:micronaut-jackson-databind")
 
     testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
     testImplementation('org.junit.jupiter:junit-jupiter')
@@ -91,10 +93,17 @@ task buildInfo {
 }
 
 compileJava {
-    sourceCompatibility = JavaVersion.toVersion("21")
-    targetCompatibility = JavaVersion.toVersion("21")
+    options.release.set(17)
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn buildInfo
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 shadowJar {
@@ -121,15 +130,10 @@ graalvmNative {
             buildArgs.add('-H:+AddAllCharsets')
             buildArgs.add('-H:EnableURLProtocols=https,http')
             buildArgs.add('-H:+ReportExceptionStackTraces')
-
-            javaLauncher = javaToolchains.launcherFor {
-                languageVersion = JavaLanguageVersion.of(17)
-            }
         }
 
         test {
             verbose = true
-            agent = true
         }
     }
 }

@@ -84,7 +84,7 @@ public class Agent implements Runnable {
     @Option(names = {"-t", "--access-token"}, description = "Tower personal access token. If not provided TOWER_ACCESS_TOKEN variable will be used.", defaultValue = "${TOWER_ACCESS_TOKEN}", required = true)
     String token;
 
-    @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].", defaultValue = "${TOWER_API_ENDPOINT:-https://api.tower.nf}", required = true)
+    @Option(names = {"-u", "--url"}, description = "Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.cloud.seqera.io].", defaultValue = "${TOWER_API_ENDPOINT:-https://api.cloud.seqera.io}", required = true)
     String url;
 
     @Option(names = {"-w", "--work-dir"}, description = "Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: ~/work].")

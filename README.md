@@ -24,8 +24,8 @@ chmod +x ./tw-agent
 ### Quick start
 
 Before running the Agent:
-- You need to create a **personal access token** in Tower. See [here](https://help.tower.nf/api/overview/#authentication).
-- On the Tower side, you need to add new **Tower Agent** credentials in a workspace. See [here](https://help.tower.nf/credentials/overview/).
+- You need to create a **personal access token** in Tower. See [here](https://docs.seqera.io/platform-cloud/api/overview#authentication).
+- On the Tower side, you need to add new **Tower Agent** credentials in a workspace. See [here](https://docs.seqera.io/platform-cloud/credentials/agent_credentials).
 - When you create the credentials you'll get an **Agent Connection ID**. You can use that one or just set your own, the important thing is that you use the same connection ID at the workspace credentials and when you run the agent.
 
 Running the Agent:
@@ -55,7 +55,7 @@ Parameters:
 
 Options:
 * -t, --access-token=<token> Tower personal access token. If not provided TOWER_ACCESS_TOKEN variable will be used.
-  -u, --url=<url>            Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.tower.nf].
+  -u, --url=<url>            Tower server API endpoint URL. If not provided TOWER_API_ENDPOINT variable will be used [default: https://api.cloud.seqera.io].
   -w, --work-dir=<workDir>   Default path where the pipeline scratch data is stored. It can be changed when launching a pipeline from Tower [default: ~/work].
   -h, --help                 Show this help message and exit.
   -V, --version              Print version information and exit.

@@ -61,3 +61,26 @@ Options:
   -V, --version              Print version information and exit.
 
 ```
+
+### Debugging with Trace Logging
+
+To troubleshoot Agent connection or execution issues, you can enable trace-level logging using the `LOGGER_LEVELS_IO_SEQERA_TOWER_AGENT` environment variable:
+
+```
+export TOWER_ACCESS_TOKEN=<your-token>
+export LOGGER_LEVELS_IO_SEQERA_TOWER_AGENT=TRACE
+
+./tw-agent <connection-id> --work-dir=<path>
+```
+
+Or as a one-liner:
+```
+LOGGER_LEVELS_IO_SEQERA_TOWER_AGENT=TRACE ./tw-agent my-connection --work-dir ~/work
+```
+
+With trace logging enabled, you'll see detailed information about:
+- WebSocket connection establishment and handshake
+- All message exchanges (CommandRequest, CommandResponse, HeartbeatMessage, InfoMessage)
+- Session expiration and reconnection attempts
+- Command execution details (ProcessBuilder calls, exit codes)
+- Full stack traces for errors

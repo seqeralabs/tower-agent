@@ -1,9 +1,9 @@
 [versions]
-foojayVersion = "0.7.0"
-graalvmNativeVersion = "0.10.4"
-junitVersion = "5.8.1"
+foojayVersion = "1.0.0"
+graalvmNativeVersion = "0.10.6"
+junitVersion = "5.14.3"
 licenserVersion = "2.2.2"
-micronautApplicationVersion = "4.4.2"
+micronautApplicationVersion = "4.6.2"
 shadowVersion = "9.3.1"
 
 [libraries]

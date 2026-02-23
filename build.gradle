@@ -50,6 +50,7 @@ dependencies {
 license {
     rule(file('HEADER.txt'))
     exclude('**/*.properties')
+    exclude('**/*.xml')
     exclude('gradlew')
 }
 

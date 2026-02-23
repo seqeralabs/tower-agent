@@ -94,6 +94,22 @@ application {
     mainClass.set("io.seqera.tower.agent.Agent")
 }
 
+tasks.register('buildInfo') {
+    doLast {
+        def version = rootProject.file('VERSION').text.trim()
+        def versionApi = rootProject.file('VERSION-API').text.trim()
+        def commitId = System.env.getOrDefault("GITHUB_SHA", "unknown").substring(0, 7)
+        def info = """\
+                    version=${version}
+                    versionApi=${versionApi}
+                    commitId=${commitId}
+                """.stripIndent().toString()
+        def f = file("src/main/resources/META-INF/build-info.properties")
+        f.parentFile.mkdirs()
+        f.text = info
+    }
+}
+
 tasks.named('compileJava') {
     options.release = 21
     options.compilerArgs += ["-Aproject=${project.name}"]
@@ -109,20 +125,4 @@ tasks.named('shadowJar') {
 tasks.named('test') {
     useJUnitPlatform()
     dependsOn tasks.named('checkLicenses')
-}
-
-tasks.register('buildInfo') {
-    doLast {
-        def version = rootProject.file('VERSION').text.trim()
-        def versionApi = rootProject.file('VERSION-API').text.trim()
-        def commitId = System.env.getOrDefault("GITHUB_SHA", "unknown").substring(0, 7)
-        def info = """\
-                    version=${version}
-                    versionApi=${versionApi}
-                    commitId=${commitId}
-                """.stripIndent().toString()
-        def f = file("src/main/resources/META-INF/build-info.properties")
-        f.parentFile.mkdirs()
-        f.text = info
-    }
 }

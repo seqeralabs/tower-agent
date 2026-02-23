@@ -12,10 +12,10 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
-    id 'org.cadixdev.licenser' version '0.6.1'
-    id 'org.graalvm.buildtools.native'
-    id("io.micronaut.application") version "4.4.2"
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    alias(libs.plugins.licenser)
+    alias(libs.plugins.graalvmNative)
+    alias(libs.plugins.micronautApplication)
+    alias(libs.plugins.shadow)
 }
 
 version = project.file('VERSION').text.strip()
@@ -25,41 +25,28 @@ repositories {
     mavenCentral()
 }
 
-micronaut {
-    runtime("netty")
-    testRuntime("junit5")
-    processing {
-        incremental(true)
-        annotations("io.seqera.tower.agent.*")
-    }
-}
-
-def junitVersion = providers.gradleProperty('junit.jupiter.version')
-        .forUseAtConfigurationTime()
-        .get()
-
 dependencies {
-    annotationProcessor("info.picocli:picocli-codegen")
-    annotationProcessor("io.micronaut:micronaut-http-validation")
-    annotationProcessor("io.micronaut:micronaut-inject-java")
-    annotationProcessor("io.micronaut:micronaut-graal")
-    implementation("io.micronaut:micronaut-http-client")
-    implementation("io.micronaut:micronaut-runtime")
-    implementation("io.micronaut.picocli:micronaut-picocli")
-    implementation("io.micronaut.rxjava2:micronaut-rxjava2")
-    implementation("io.micronaut.rxjava2:micronaut-rxjava2-http-client")
-    implementation("info.picocli:picocli")
-    implementation("javax.annotation:javax.annotation-api")
-    implementation("javax.inject:javax.inject:1")
-    runtimeOnly("ch.qos.logback:logback-classic")
-    runtimeOnly("org.yaml:snakeyaml")
-    compileOnly("org.graalvm.nativeimage:svm")
+    annotationProcessor(libs.picocliCodegen)
+    annotationProcessor(libs.micronautHttpValidation)
+    annotationProcessor(libs.micronautInjectJava)
+    annotationProcessor(libs.micronautGraal)
+    implementation(libs.micronautHttpClient)
+    implementation(libs.micronautRuntime)
+    implementation(libs.micronautPicocli)
+    implementation(libs.micronautRxjava2)
+    implementation(libs.micronautRxjava2HttpClient)
+    implementation(libs.picocli)
+    implementation(libs.javaxAnnotation)
+    implementation(libs.javaxInject)
+    runtimeOnly(libs.logbackClassic)
+    runtimeOnly(libs.snakeyaml)
+    compileOnly(libs.graalvmSvm)
 
-    implementation("io.micronaut.validation:micronaut-validation")
-    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation(libs.micronautValidation)
+    implementation(libs.micronautJacksonDatabind)
 
-    testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
-    testImplementation('org.junit.jupiter:junit-jupiter')
+    testImplementation(platform(libs.junitBom))
+    testImplementation(libs.junitJupiter)
 }
 
 license {
@@ -72,23 +59,9 @@ license {
     exclude 'gradlew'
 }
 
-application {
-    mainClass.set("io.seqera.tower.agent.Agent")
-}
-
-task buildInfo {
-    doLast {
-        def version = rootProject.file('VERSION').text.trim()
-        def versionApi = rootProject.file('VERSION-API').text.trim()
-        def commitId = System.env.getOrDefault("GITHUB_SHA", "unknown").substring(0,7)
-        def info = """\
-                    version=${version}
-                    versionApi=${versionApi}
-                    commitId=${commitId}
-                """.stripIndent().toString()
-        def f = file("src/main/resources/META-INF/build-info.properties")
-        f.parentFile.mkdirs()
-        f.text = info
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -99,24 +72,6 @@ compileJava {
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn buildInfo
 }
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-shadowJar {
-    archiveBaseName.set('tw-agent')
-    archiveClassifier.set('')
-    archiveVersion.set('')
-}
-
-test {
-    useJUnitPlatform()
-    dependsOn checkLicenses
-}
-
 
 graalvmNative {
     binaries {
@@ -138,6 +93,44 @@ graalvmNative {
     }
 }
 
+shadowJar {
+    archiveBaseName.set('tw-agent')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
 
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("io.seqera.tower.agent.*")
+    }
+}
+
+application {
+    mainClass.set("io.seqera.tower.agent.Agent")
+}
+
+test {
+    useJUnitPlatform()
+    dependsOn checkLicenses
+}
+
+task buildInfo {
+    doLast {
+        def version = rootProject.file('VERSION').text.trim()
+        def versionApi = rootProject.file('VERSION-API').text.trim()
+        def commitId = System.env.getOrDefault("GITHUB_SHA", "unknown").substring(0, 7)
+        def info = """\
+                    version=${version}
+                    versionApi=${versionApi}
+                    commitId=${commitId}
+                """.stripIndent().toString()
+        def f = file("src/main/resources/META-INF/build-info.properties")
+        f.parentFile.mkdirs()
+        f.text = info
+    }
+}
 
 

@@ -1,5 +1,4 @@
 [versions]
-foojayVersion = "1.0.0"
 graalvmNativeVersion = "0.10.6"
 junitVersion = "5.14.3"
 licenserVersion = "2.2.2"
@@ -28,7 +27,6 @@ picocliCodegen = { group = "info.picocli", name = "picocli-codegen" }
 snakeyaml = { group = "org.yaml", name = "snakeyaml" }
 
 [plugins]
-foojay = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojayVersion" }
 graalvmNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmNativeVersion" }
 licenser = { id = "dev.yumi.gradle.licenser", version.ref = "licenserVersion" }
 micronautApplication = { id = "io.micronaut.application", version.ref = "micronautApplicationVersion" }

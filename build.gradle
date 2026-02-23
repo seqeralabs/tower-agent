@@ -9,8 +9,6 @@
  *  defined by the Mozilla Public License, v. 2.0.
  */
 
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-
 plugins {
     alias(libs.plugins.licenser)
     alias(libs.plugins.graalvmNative)
@@ -61,21 +59,15 @@ java {
     }
 }
 
-compileJava {
-    options.release.set(17)
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
-    options.compilerArgs += ["-Aproject=${project.name}"]
-    dependsOn buildInfo
-}
-
 graalvmNative {
     binaries {
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
-            buildArgs(DefaultNativePlatform.currentOperatingSystem.isLinux() ? ['--static', '--libc=musl'] : [])
+            if (System.env.getOrDefault("PLATFORM", "") == "linux-x86_64") {
+                buildArgs(['--static', '--libc=musl'])
+            }
             buildArgs.add('--allow-incomplete-classpath')
             buildArgs.add('--report-unsupported-elements-at-runtime')
             buildArgs.add('-H:+AddAllCharsets')
@@ -87,12 +79,6 @@ graalvmNative {
             verbose = true
         }
     }
-}
-
-shadowJar {
-    archiveBaseName.set('tw-agent')
-    archiveClassifier.set('')
-    archiveVersion.set('')
 }
 
 micronaut {
@@ -108,12 +94,24 @@ application {
     mainClass.set("io.seqera.tower.agent.Agent")
 }
 
-test {
-    useJUnitPlatform()
-    dependsOn checkLicenses
+tasks.named('compileJava') {
+    options.release = 21
+    options.compilerArgs += ["-Aproject=${project.name}"]
+    dependsOn tasks.named('buildInfo')
 }
 
-task buildInfo {
+tasks.named('shadowJar') {
+    archiveBaseName.set('tw-agent')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    dependsOn tasks.named('checkLicenses')
+}
+
+tasks.register('buildInfo') {
     doLast {
         def version = rootProject.file('VERSION').text.trim()
         def versionApi = rootProject.file('VERSION-API').text.trim()
@@ -128,5 +126,3 @@ task buildInfo {
         f.text = info
     }
 }
-
-

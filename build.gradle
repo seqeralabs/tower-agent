@@ -50,13 +50,9 @@ dependencies {
 }
 
 license {
-    header = project.file('HEADER.txt')
-    properties {
-        name = 'Seqera'
-        year = '2021-2024'
-    }
-    exclude '**/*.properties'
-    exclude 'gradlew'
+    rule(file('HEADER.txt'))
+    exclude('**/*.properties')
+    exclude('gradlew')
 }
 
 java {

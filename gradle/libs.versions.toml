@@ -2,7 +2,7 @@
 foojayVersion = "0.7.0"
 graalvmNativeVersion = "0.10.4"
 junitVersion = "5.8.1"
-licenserVersion = "0.6.1"
+licenserVersion = "2.2.2"
 micronautApplicationVersion = "4.4.2"
 shadowVersion = "8.1.1"
 
@@ -30,6 +30,6 @@ snakeyaml = { group = "org.yaml", name = "snakeyaml" }
 [plugins]
 foojay = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojayVersion" }
 graalvmNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmNativeVersion" }
-licenser = { id = "org.cadixdev.licenser", version.ref = "licenserVersion" }
+licenser = { id = "dev.yumi.gradle.licenser", version.ref = "licenserVersion" }
 micronautApplication = { id = "io.micronaut.application", version.ref = "micronautApplicationVersion" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowVersion" }

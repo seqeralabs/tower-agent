@@ -95,7 +95,7 @@ jobs:
           echo "::set-output name=VERSION::$VERSION"
 
       - name: Run JReleaser
-        uses: jreleaser/release-action@v1
+        uses: jreleaser/release-action@082d8e644166794bcd85f00410af969b1655ca3f # 1.4.0
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JRELEASER_PROJECT_VERSION: ${{ steps.version.outputs.VERSION }}

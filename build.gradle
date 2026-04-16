@@ -9,6 +9,15 @@
  *  defined by the Mozilla Public License, v. 2.0.
  */
 
+buildscript {
+    dependencies {
+        classpath('dev.yumi:yumi-gradle-licenser:2.2.2') {
+            exclude group: 'org.eclipse.jgit', module: 'org.eclipse.jgit'
+        }
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'
+    }
+}
+
 plugins {
     alias(libs.plugins.licenser)
     alias(libs.plugins.graalvmNative)

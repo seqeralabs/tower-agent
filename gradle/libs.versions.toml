@@ -1,9 +1,9 @@
 [versions]
-graalvmNativeVersion = "0.10.6"
+graalvmNativeVersion = "0.11.1"
 junitVersion = "5.14.3"
-licenserVersion = "2.2.2"
+licenserVersion = "3.0.1"
 micronautApplicationVersion = "4.6.2"
-shadowVersion = "9.3.1"
+shadowVersion = "9.4.1"
 
 [libraries]
 graalvmSvm = { group = "org.graalvm.nativeimage", name = "svm" }

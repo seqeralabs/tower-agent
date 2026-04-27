@@ -61,6 +61,9 @@ java {
 }
 
 graalvmNative {
+    metadataRepository {
+        version = "0.3.35"
+    }
     binaries {
         main {
             imageName = 'tw-agent'

@@ -1,5 +1,5 @@
 [versions]
-graalvmNativeVersion = "0.11.1"
+graalvmNativeVersion = "1.1.0"
 junitVersion = "5.14.3"
 licenserVersion = "3.0.1"
 micronautApplicationVersion = "4.6.2"

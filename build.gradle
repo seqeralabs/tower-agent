@@ -83,6 +83,7 @@ graalvmNative {
 }
 
 micronaut {
+    version "4.10.16"
     runtime("netty")
     testRuntime("junit5")
     processing {

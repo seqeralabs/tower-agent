@@ -15,7 +15,7 @@ jobs:
     - name: Setup Graalvm
       uses: graalvm/setup-graalvm@5298d94fb55a4f185c602eeac5de1b553882abe2 # v1.6.4
       with:
-        java-version: '21'
+        java-version: '25'
         distribution: 'graalvm-community'
         native-image-musl: 'true'
 

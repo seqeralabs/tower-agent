@@ -60,7 +60,7 @@ license {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -116,7 +116,7 @@ tasks.register('buildInfo') {
 }
 
 tasks.named('compileJava') {
-    options.release = 21
+    options.release = 17
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn tasks.named('buildInfo')
 }

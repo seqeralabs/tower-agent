@@ -24,6 +24,10 @@ repositories {
 }
 
 dependencies {
+    // Lift Jackson to the patched release (CVE-2026-54512, CVE-2026-54513).
+    // The Micronaut BOM otherwise resolves a vulnerable jackson-databind below the 2.21.4
+    // fix. Drop this once the Micronaut BOM ships jackson >= 2.21.4.
+    implementation(platform("com.fasterxml.jackson:jackson-bom:2.21.5"))
     annotationProcessor(libs.picocliCodegen)
     annotationProcessor(libs.micronautHttpValidation)
     annotationProcessor(libs.micronautInjectJava)

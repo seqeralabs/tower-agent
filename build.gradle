@@ -59,9 +59,13 @@ license {
 }
 
 java {
+    // Profile B (Micronaut runtime module) per seqeralabs/adr#51:
+    // build on the Java 25 toolchain and target Java 25 (no --release 17 cap).
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 graalvmNative {
@@ -116,7 +120,6 @@ tasks.register('buildInfo') {
 }
 
 tasks.named('compileJava') {
-    options.release = 21
     options.compilerArgs += ["-Aproject=${project.name}"]
     dependsOn tasks.named('buildInfo')
 }

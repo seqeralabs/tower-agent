@@ -91,6 +91,10 @@ graalvmNative {
 }
 
 micronaut {
+    // The plugin's default Micronaut platform BOM (4.10.16) resolves netty 4.2.15.Final,
+    // which is vulnerable to CVE-2026-59901. Pinning the BOM lifts netty to 4.2.16.Final.
+    // Drop this once the io.micronaut.application plugin defaults to 4.10.17 or later.
+    version(libs.versions.micronautPlatformVersion.get())
     runtime("netty")
     testRuntime("junit5")
     processing {

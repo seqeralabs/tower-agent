@@ -74,6 +74,9 @@ graalvmNative {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
+            // PLATFORM is set by the "Build Native Image" step in .github/workflows/build.yml.
+            // Without these flags the binary is dynamically linked against the build host's
+            // glibc and will not start on older HPC login nodes (COMP-2515).
             if (System.env.getOrDefault("PLATFORM", "") == "linux-x86_64") {
                 buildArgs(['--static', '--libc=musl'])
             }

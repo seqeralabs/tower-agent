@@ -47,6 +47,16 @@ jobs:
 
       - name: Build Native Image
         run: ./gradlew nativeCompile
+        env:
+          PLATFORM: linux-x86_64
+
+      - name: Verify native image is statically linked
+        run: |
+          file build/native/nativeCompile/tw-agent
+          file build/native/nativeCompile/tw-agent | grep -q 'statically linked' || {
+            echo "::error::tw-agent is not statically linked -- --static --libc=musl did not reach native-image"
+            exit 1
+          }
 
       - name: Build fat JAR
         run: ./gradlew shadowJar

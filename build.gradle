@@ -87,16 +87,17 @@ graalvmNative {
             buildArgs.add('-H:+UnlockExperimentalVMOptions')
             buildArgs.add('-H:+SharedArenaSupport')
             buildArgs.add('-H:-UnlockExperimentalVMOptions')
+            // GraalVM defaults to x86-64-v3 (AVX2), which some older HPC login nodes lack.
+            buildArgs.add('-march=compatibility')
         }
 
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
-            buildArgs.add('--allow-incomplete-classpath')
-            buildArgs.add('--report-unsupported-elements-at-runtime')
             buildArgs.add('-H:+AddAllCharsets')
-            buildArgs.add('-H:EnableURLProtocols=https,http')
+            buildArgs.add('--enable-http')
+            buildArgs.add('--enable-https')
             buildArgs.add('-H:+ReportExceptionStackTraces')
         }
 

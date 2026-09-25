@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -201,12 +202,45 @@ public class Agent implements Runnable {
             process.destroy();
             response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
         } catch (Throwable e) {
-            response = new CommandResponse(message.getId(), e.getMessage().getBytes(), 1);
+            response = new CommandResponse(message.getId(), errorResult(e), 1);
         }
         // send result
         logger.info("Sending response {}'", response.getId());
         logger.trace("RESPONSE: {}", response);
-        agentClient.sendAsync(response);
+        sendResponse(agentClient, response);
+    }
+
+    /**
+     * Sends a command response and logs it if the send fails
+     *
+     * @param client   Agent WebSocket client
+     * @param response Command response to send
+     * @return Send result, completed exceptionally on any failure
+     */
+    static CompletableFuture<String> sendResponse(AgentClientSocket client, CommandResponse response) {
+        CompletableFuture<String> sent;
+        try {
+            sent = client.sendAsync(response);
+        } catch (Exception e) {
+            // a closed session fails synchronously instead of through the future
+            sent = CompletableFuture.failedFuture(e);
+        }
+        return sent.whenComplete((ignored, error) -> {
+            if (error != null) {
+                logger.error("Failed to send response {}", response.getId(), error);
+            }
+        });
+    }
+
+    /**
+     * Result sent back to Tower when a command fails to run
+     *
+     * @param e Failure raised while running the command
+     * @return The failure message, or its type when it has no message
+     */
+    static byte[] errorResult(Throwable e) {
+        String error = e.getMessage() != null ? e.getMessage() : e.toString();
+        return error.getBytes();
     }
 
     /**

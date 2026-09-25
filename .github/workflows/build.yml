@@ -49,6 +49,8 @@ jobs:
       # by default and only fail at run time, which a JVM test run cannot detect.
       - name: Native tests
         run: ./gradlew nativeTest
+        env:
+          PLATFORM: linux-x86_64
 
       - name: Build Native Image
         run: ./gradlew nativeCompile

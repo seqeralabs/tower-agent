@@ -72,6 +72,13 @@ java {
 graalvmNative {
     binaries {
         all {
+            // PLATFORM is set by the "Native tests" and "Build Native Image" steps in
+            // .github/workflows/build.yml. Without these flags the binary is dynamically linked
+            // against the build host's glibc and will not start on older HPC login nodes (COMP-2515).
+            // Applied to all binaries so nativeTest runs a static musl image, like the release.
+            if (System.env.getOrDefault("PLATFORM", "") == "linux-x86_64") {
+                buildArgs(['--static', '--libc=musl'])
+            }
             // Netty 4.2 on Java 25 frees direct buffers over 1 MiB with Arena.ofShared().close(),
             // which GraalVM CE 25.0.x disables by default (netty/netty#17172); without it, command
             // responses over ~768 KiB fail to send. Applied to all binaries so nativeTest covers it.
@@ -84,12 +91,6 @@ graalvmNative {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
-            // PLATFORM is set by the "Build Native Image" step in .github/workflows/build.yml.
-            // Without these flags the binary is dynamically linked against the build host's
-            // glibc and will not start on older HPC login nodes (COMP-2515).
-            if (System.env.getOrDefault("PLATFORM", "") == "linux-x86_64") {
-                buildArgs(['--static', '--libc=musl'])
-            }
             buildArgs.add('--allow-incomplete-classpath')
             buildArgs.add('--report-unsupported-elements-at-runtime')
             buildArgs.add('-H:+AddAllCharsets')

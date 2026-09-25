@@ -206,7 +206,12 @@ public class Agent implements Runnable {
         // send result
         logger.info("Sending response {}'", response.getId());
         logger.trace("RESPONSE: {}", response);
-        agentClient.sendAsync(response);
+        final String responseId = response.getId();
+        agentClient.sendAsync(response).whenComplete((ignored, error) -> {
+            if (error != null) {
+                logger.error("Failed to send response {}", responseId, error);
+            }
+        });
     }
 
     /**

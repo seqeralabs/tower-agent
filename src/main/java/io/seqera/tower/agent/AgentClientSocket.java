@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -93,7 +93,7 @@ abstract class AgentClientSocket implements AutoCloseable {
 
     abstract void send(AgentMessage message);
 
-    public abstract Future<String> sendAsync(AgentMessage message);
+    public abstract CompletableFuture<String> sendAsync(AgentMessage message);
 
     public boolean isOpen() {
         return session.isOpen();

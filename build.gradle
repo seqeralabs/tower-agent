@@ -71,6 +71,15 @@ java {
 
 graalvmNative {
     binaries {
+        all {
+            // Netty 4.2 on Java 25 frees direct buffers over 1 MiB with Arena.ofShared().close(),
+            // which GraalVM CE 25.0.x disables by default (netty/netty#17172); without it, command
+            // responses over ~768 KiB fail to send. Applied to all binaries so nativeTest covers it.
+            buildArgs.add('-H:+UnlockExperimentalVMOptions')
+            buildArgs.add('-H:+SharedArenaSupport')
+            buildArgs.add('-H:-UnlockExperimentalVMOptions')
+        }
+
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'

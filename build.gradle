@@ -49,6 +49,7 @@ dependencies {
 
     testImplementation(platform(libs.junitBom))
     testImplementation(libs.junitJupiter)
+    testImplementation(libs.nettyBuffer)
 }
 
 license {

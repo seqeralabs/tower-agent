@@ -45,6 +45,11 @@ jobs:
           name: linux-test-reports
           path: build/reports/tests/test/
 
+      # Re-runs the tests inside a native image. Some GraalVM features are disabled
+      # by default and only fail at run time, which a JVM test run cannot detect.
+      - name: Native tests
+        run: ./gradlew nativeTest
+
       - name: Build Native Image
         run: ./gradlew nativeCompile
         env:

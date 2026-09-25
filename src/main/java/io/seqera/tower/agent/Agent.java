@@ -201,7 +201,7 @@ public class Agent implements Runnable {
             process.destroy();
             response = new CommandResponse(message.getId(), result.getBytes(), exitStatus);
         } catch (Throwable e) {
-            response = new CommandResponse(message.getId(), e.getMessage().getBytes(), 1);
+            response = new CommandResponse(message.getId(), errorResult(e), 1);
         }
         // send result
         logger.info("Sending response {}'", response.getId());
@@ -212,6 +212,17 @@ public class Agent implements Runnable {
                 logger.error("Failed to send response {}", responseId, error);
             }
         });
+    }
+
+    /**
+     * Result sent back to Tower when a command fails to run
+     *
+     * @param e Failure raised while running the command
+     * @return The failure message, or its type when it has no message
+     */
+    static byte[] errorResult(Throwable e) {
+        String error = e.getMessage() != null ? e.getMessage() : e.toString();
+        return error.getBytes();
     }
 
     /**

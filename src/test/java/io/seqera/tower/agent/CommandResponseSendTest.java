@@ -35,8 +35,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Sends a command response larger than Netty's 1 MiB pooling threshold through the
- * real agent WebSocket client. Under {@code nativeTest} this covers the whole send
- * path (JSON encoding, frame writing, buffer release) inside a native image.
+ * real agent WebSocket client over {@code wss://}, as the agent talks to Tower. Under
+ * {@code nativeTest} this covers the whole send path (JSON encoding, TLS, frame writing,
+ * buffer release) inside a native image. TLS is configured in application-test.yml.
  */
 @MicronautTest
 class CommandResponseSendTest {
@@ -62,6 +63,7 @@ class CommandResponseSendTest {
     void sendsResponseAbovePoolingThreshold() throws Exception {
         byte[] result = new byte[2 * 1024 * 1024];
         Arrays.fill(result, (byte) 'x');
+        Assertions.assertEquals("https", server.getScheme(), "the send path must run over TLS");
 
         AgentClientSocket socket = webSocketClient
                 .connect(AgentClientSocket.class, HttpRequest.GET(server.getURI().resolve("/test/agent")))

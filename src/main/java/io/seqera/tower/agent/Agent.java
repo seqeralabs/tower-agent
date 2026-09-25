@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -206,10 +207,27 @@ public class Agent implements Runnable {
         // send result
         logger.info("Sending response {}'", response.getId());
         logger.trace("RESPONSE: {}", response);
-        final String responseId = response.getId();
-        agentClient.sendAsync(response).whenComplete((ignored, error) -> {
+        sendResponse(agentClient, response);
+    }
+
+    /**
+     * Sends a command response and logs it if the send fails
+     *
+     * @param client   Agent WebSocket client
+     * @param response Command response to send
+     * @return Send result, completed exceptionally on any failure
+     */
+    static CompletableFuture<String> sendResponse(AgentClientSocket client, CommandResponse response) {
+        CompletableFuture<String> sent;
+        try {
+            sent = client.sendAsync(response);
+        } catch (Exception e) {
+            // a closed session fails synchronously instead of through the future
+            sent = CompletableFuture.failedFuture(e);
+        }
+        return sent.whenComplete((ignored, error) -> {
             if (error != null) {
-                logger.error("Failed to send response {}", responseId, error);
+                logger.error("Failed to send response {}", response.getId(), error);
             }
         });
     }

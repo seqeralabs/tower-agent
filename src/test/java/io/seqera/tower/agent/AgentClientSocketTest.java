@@ -22,7 +22,9 @@ import io.micronaut.runtime.server.EmbeddedServer;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.websocket.annotation.OnMessage;
 import io.micronaut.websocket.annotation.ServerWebSocket;
+import io.micronaut.websocket.exceptions.WebSocketClientException;
 import io.seqera.tower.agent.exchange.AgentMessage;
+import io.seqera.tower.agent.exchange.CommandResponse;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -33,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * The agent logs failed responses from the future returned by
- * {@link AgentClientSocket#sendAsync}, so a failure to encode or write a message
- * must complete that future exceptionally rather than being thrown or dropped.
+ * {@link Agent#sendResponse}, so every way a send can fail must complete that
+ * future exceptionally rather than being thrown or dropped.
  */
 @MicronautTest
 class AgentClientSocketTest {
@@ -62,18 +64,49 @@ class AgentClientSocketTest {
 
     @Test
     void sendAsyncReportsEncodingFailureThroughFuture() throws Exception {
-        AgentClientSocket socket = webSocketClient
-                .connect(AgentClientSocket.class, HttpRequest.GET(server.getURI().resolve("/test/socket")))
-                .timeout(10, TimeUnit.SECONDS)
-                .blockingFirst();
+        AgentClientSocket socket = connect();
         try {
             CompletableFuture<String> result = socket.sendAsync(new UnencodableMessage());
 
             ExecutionException failure = Assertions.assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-            Assertions.assertNotNull(failure.getCause());
+            Assertions.assertTrue(hasCause(failure, IllegalStateException.class, "cannot encode"), () -> "unexpected failure: " + failure);
         } finally {
             socket.close();
         }
+    }
+
+    @Test
+    void sendResponseReportsClosedSessionThroughFuture() throws Exception {
+        AgentClientSocket socket = connect();
+        socket.close();
+        for (int i = 0; i < 100 && socket.isOpen(); i++) {
+            Thread.sleep(50);
+        }
+        Assertions.assertFalse(socket.isOpen());
+        CommandResponse response = new CommandResponse("closed", new byte[0], 0);
+
+        // sendAsync itself throws on a closed session, which is why sendResponse catches it
+        Assertions.assertThrows(WebSocketClientException.class, () -> socket.sendAsync(response));
+
+        CompletableFuture<String> result = Agent.sendResponse(socket, response);
+        ExecutionException failure = Assertions.assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
+        Assertions.assertInstanceOf(WebSocketClientException.class, failure.getCause());
+    }
+
+    private AgentClientSocket connect() {
+        return webSocketClient
+                .connect(AgentClientSocket.class, HttpRequest.GET(server.getURI().resolve("/test/socket")))
+                .timeout(10, TimeUnit.SECONDS)
+                .blockingFirst();
+    }
+
+    private static boolean hasCause(Throwable failure, Class<? extends Throwable> type, String message) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (type.isInstance(cause) && message.equals(cause.getMessage())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -105,6 +105,11 @@ graalvmNative {
             verbose = true
         }
     }
+
+    // The reachability metadata repository only has Netty 4.1 entries, and they replace the
+    // config bundled in the Netty 4.2 jars. Do not exclude them: Netty's own config initialises
+    // io.netty at build time, which fails the build with a Logback logger in the image heap.
+    // CommandResponseSendTest guards the send path under nativeTest instead.
 }
 
 micronaut {

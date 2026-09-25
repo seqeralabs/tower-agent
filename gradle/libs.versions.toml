@@ -22,6 +22,7 @@ micronautRuntime = { group = "io.micronaut", name = "micronaut-runtime" }
 micronautRxjava2 = { group = "io.micronaut.rxjava2", name = "micronaut-rxjava2" }
 micronautRxjava2HttpClient = { group = "io.micronaut.rxjava2", name = "micronaut-rxjava2-http-client" }
 micronautValidation = { group = "io.micronaut.validation", name = "micronaut-validation" }
+nettyBuffer = { group = "io.netty", name = "netty-buffer" }
 picocli = { group = "info.picocli", name = "picocli" }
 picocliCodegen = { group = "info.picocli", name = "picocli-codegen" }
 snakeyaml = { group = "org.yaml", name = "snakeyaml" }

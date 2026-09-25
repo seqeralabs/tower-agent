@@ -30,7 +30,7 @@ jobs:
       - name: Setup Graalvm
         uses: graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276 # v1.6.6
         with:
-          java-version: '25'
+          java-version: '25.0.2'
           distribution: 'graalvm-community'
           native-image-musl: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,6 +44,13 @@ jobs:
         with:
           name: linux-test-reports
           path: build/reports/tests/test/
+
+      # Re-runs the tests inside a native image. Some GraalVM features are disabled
+      # by default and only fail at run time, which a JVM test run cannot detect.
+      - name: Native tests
+        run: ./gradlew nativeTest
+        env:
+          PLATFORM: linux-x86_64
 
       - name: Build Native Image
         run: ./gradlew nativeCompile

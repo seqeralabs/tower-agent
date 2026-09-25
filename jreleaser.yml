@@ -11,7 +11,7 @@ project:
 
   java:
     groupId: io.seqera.tower.agent
-    version: 21
+    version: 25
 
 release:
   github:

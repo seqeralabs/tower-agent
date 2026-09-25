@@ -56,6 +56,7 @@ license {
     rule(file('HEADER.txt'))
     exclude('**/*.properties')
     exclude('**/*.xml')
+    exclude('**/*.p12')
     exclude('gradlew')
 }
 
@@ -87,16 +88,17 @@ graalvmNative {
             buildArgs.add('-H:+UnlockExperimentalVMOptions')
             buildArgs.add('-H:+SharedArenaSupport')
             buildArgs.add('-H:-UnlockExperimentalVMOptions')
+            // GraalVM defaults to x86-64-v3 (AVX2), which some older HPC login nodes lack.
+            buildArgs.add('-march=compatibility')
         }
 
         main {
             imageName = 'tw-agent'
             mainClass = 'io.seqera.tower.agent.Agent'
             configurationFileDirectories.from(file('conf'))
-            buildArgs.add('--allow-incomplete-classpath')
-            buildArgs.add('--report-unsupported-elements-at-runtime')
             buildArgs.add('-H:+AddAllCharsets')
-            buildArgs.add('-H:EnableURLProtocols=https,http')
+            buildArgs.add('--enable-http')
+            buildArgs.add('--enable-https')
             buildArgs.add('-H:+ReportExceptionStackTraces')
         }
 
@@ -104,6 +106,11 @@ graalvmNative {
             verbose = true
         }
     }
+
+    // The reachability metadata repository only has Netty 4.1 entries, and they replace the
+    // config bundled in the Netty 4.2 jars. Do not exclude them: Netty's own config initialises
+    // io.netty at build time, which fails the build with a Logback logger in the image heap.
+    // CommandResponseSendTest guards the wss:// send path under nativeTest instead.
 }
 
 micronaut {

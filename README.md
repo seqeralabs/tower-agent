@@ -21,6 +21,12 @@ chmod +x ./tw-agent
 
 3. (OPTIONAL) Move it into a folder that is in your path.
 
+Each release also ships `tw-agent.jar`, which runs on any platform with Java 25 or later:
+```
+curl -fSL https://github.com/seqeralabs/tower-agent/releases/latest/download/tw-agent.jar > tw-agent.jar
+java -jar tw-agent.jar <your agent connection ID>
+```
+
 ### Quick start
 
 Before running the Agent:

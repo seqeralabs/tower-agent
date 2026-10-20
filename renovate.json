@@ -12,6 +12,11 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "groupName": "github actions"
+    },
+    {
+      "description": "setup-graalvm rejects java-jdk (Temurin) versions like 25.0.4+7.0.LTS; the GraalVM JDK is pinned for the native image (COMP-2583) and bumped by hand",
+      "matchDepNames": ["java-jdk"],
+      "enabled": false
     }
   ]
 }

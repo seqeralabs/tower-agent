@@ -55,13 +55,26 @@ jobs:
       # gate above, and pin checkout to it instead of the branch ref.
       # https://github.com/AdnaneKhan/ActionsTOCTOU
       # https://docs.github.com/en/actions/reference/security/secure-use
+      #
+      # CodeQL actions/untrusted-checkout/high: comment and review events run with
+      # secrets whatever the PR's origin, and the author_association guard above
+      # vets only the commenter, not the code. On a fork PR the head is written,
+      # and can be replaced after the @claude comment, by someone with no access
+      # to this repository. Refuse fork heads here, where issue_comment can first
+      # see the head repository, so the checkout below only ever holds code that
+      # someone with write access pushed.
       - name: Resolve trusted PR head SHA
         id: resolve-sha
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
-          SHA=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json headRefOid --jq .headRefOid)
+          PR_HEAD=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json headRefOid,isCrossRepository)
+          if [ "$(jq -r .isCrossRepository <<< "$PR_HEAD")" != "false" ]; then
+            echo "::error::Claude reviews only pull requests from branches of ${{ github.repository }}; PR #$PR_NUMBER comes from a fork."
+            exit 1
+          fi
+          SHA=$(jq -r .headRefOid <<< "$PR_HEAD")
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Checkout PR head
